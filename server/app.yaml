@@ -1,0 +1,22 @@
+﻿runtime: python27
+threadsafe: true
+api_version: 1
+instance_class: F4
+
+automatic_scaling:
+  min_idle_instances: 1
+  max_idle_instances: automatic
+
+handlers:
+- url: /api/v1/.*
+  script: main.app
+
+- url: /maintain/.*
+  script: main.app
+  login: admin
+
+libraries:
+- name: MySQLdb
+  version: "latest"
+- name: pycrypto
+  version: "latest"

@@ -1,0 +1,4 @@
+﻿cron:
+- description: "update-main-db"
+  url: /maintain/cron/update_db
+  schedule: every 1 mins
