@@ -70,6 +70,14 @@ cron で TaskQueue にデータ同期のリクエストが投げられ、
 立ち上げるコインノードを変更すれば、多少の変更が必要となるかもしれませんが、
 他のアルトコインでも動く可能性があります。
 
+## 連絡先
+
+お問い合わせ、ご要望、バグ報告等は、github の issue へお気軽にどうぞ。
+https://github.com/vippool/clerk/issues
+
+もしくは、開発チームまでメールいただいても構いません。
+dev-team@vippool.net
+
 ## ライセンス
 
 (C) 2019-2019 VIPPOOL Inc.
