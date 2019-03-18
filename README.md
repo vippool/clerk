@@ -1,85 +1,85 @@
 # vippool-clerk
 
-���̃v���W�F�N�g�́AGoogle App Engine �œ��삷��A
-�u���b�N�`�F�[���̏��擾�E�g�����U�N�V�����쐬�̕⏕���s���A�v���P�[�V�����ł��B
+このプロジェクトは、Google App Engine で動作する、
+ブロックチェーンの情報取得・トランザクション作成の補助を行うアプリケーションです。
 
-## �ł��邱��
+## できること
 
-�R�C���m�[�h�� RPC �Ŏ擾�ł���A�u���b�N���E�g�����U�N�V���������A
-RDB �Ɋi�[���Ă��āA����� JSON �`���Ŏ擾�ł��܂��B
+コインノードの RPC で取得できる、ブロック情報・トランザクション情報を、
+RDB に格納していて、それを JSON 形式で取得できます。
 
-�R�C���m�[�h�� RPC �Ŏ擾�ł���g�����U�N�V�������ɂ́A
-�ߋ��֌����������N�̏��͊i�[����Ă��܂����A���Ε����̃����N������܂���B
-vippool-clerk �́A�����⊮���ĕԂ����߁A�������֐��������ł��B
+コインノードの RPC で取得できるトランザクション情報には、
+過去へ向かうリンクの情報は格納されていますが、反対方向のリンクがありません。
+vippool-clerk は、それを補完して返すため、多少利便性が高いです。
 
-�܂��A�R�C���A�h���X���Ƃ̎c�����ڂ� RDB �ɋL�^���Ă��܂��B
-���̏������ɁA����A�v���Ȃǂ̍쐬���\�ƂȂ�܂��B
+また、コインアドレスごとの残高推移も RDB に記録しています。
+この情報を元に、帳簿アプリなどの作成が可能となります。
 
-�Ō�ɁA�V�K�g�����U�N�V�����쐬�̕⏕�@�\�������Ă��܂��B
-�g�����U�N�V�����쐬�� 2 �̃X�e�[�W�ɕ�����Ă���A
-API �Ăяo���ŕԂ����n�b�V���ɑ΂��āA�N���C�A���g����
-ECDSA �������쐬���A�ēx API ���Ăяo�����ƂŁA�g�����U�N�V�����쐬���������܂��B
+最後に、新規トランザクション作成の補助機能を持っています。
+トランザクション作成は 2 つのステージに分かれており、
+API 呼び出しで返されるハッシュに対して、クライアント側で
+ECDSA 署名を作成し、再度 API を呼び出すことで、トランザクション作成が完了します。
 
-���̂悤�ɁA�d�q�����쐬���N���C�A���g���ōs�����ƂŁA
-�閧���̘R�k�̉\�����Ȃ������Ƃ��ł��܂��B
+このように、電子署名作成をクライアント側で行うことで、
+秘密鍵の漏洩の可能性をなくすことができます。
 
-## API �̎g�p���@
+## API の使用方法
 
-���J���Ă��� API �ɂ��ẮAdoc/api.md �� API ���Ƃ̃}�j���A��������܂��̂ŁA
-��������Q�Ƃ��Ă��������B
+公開している API については、doc/api.md に API ごとのマニュアルがありますので、
+そちらを参照してください。
 
-## �C���X�g�[�����@
+## インストール方法
 
-�C���X�g�[���ɂ́A�ȉ��̂��̂��K�v�ł��B
-1. Google App Engine �̃A�J�E���g
-2. Google Cloud SQL �T�[�o
-3. �R�C���m�[�h�T�[�o (Google Compute Engine �ŗ����グ�Ă���)
+インストールには、以下のものが必要です。
+1. Google App Engine のアカウント
+2. Google Cloud SQL サーバ
+3. コインノードサーバ (Google Compute Engine で立ち上げても可)
 
-�܂��A�R�C���m�[�h�� 1 �䗧���グ�܂��B
-�R�C���m�[�h�� conf �t�@�C���ɂ́A�ȉ��̋L�ڂ������Ă��������B
+まず、コインノードを 1 台立ち上げます。
+コインノードの conf ファイルには、以下の記載を加えてください。
 > "server=1
-rpcuser=���[�U��
-rpcpassword=�p�X���[�h
-rpcport=�|�[�g�ԍ�
+rpcuser=ユーザ名
+rpcpassword=パスワード
+rpcport=ポート番号
 rpcallowip=0.0.0.0/0
 txindex=1"
 
-rpcallowip �́AGoogle App Engine �T�[�o���ǂ�����A�N�Z�X���邩�킩��Ȃ����߁A
-�K�v�ł��B���z�l�b�g���[�N���\�z���āA���[�J�� IP �A�h���X�Ɍ��肵�Ă��ǂ��ł��B
-txindex �́A�S�Ẵg�����U�N�V�����f�[�^���擾���邽�߂ɕK�v�ł��B
+rpcallowip は、Google App Engine サーバがどこからアクセスするかわからないため、
+必要です。仮想ネットワークを構築して、ローカル IP アドレスに限定しても良いです。
+txindex は、全てのトランザクションデータを取得するために必要です。
 
-���ɁAGoogle Cloud SQL �̐ݒ���s���܂��B
-MySQL �T�[�o�𗧂��グ�Ă��������B�ݒ�̓f�t�H���g�̂܂܂Ŗ�肠��܂��񂪁A
-�p�t�H�[�}���X�������Ȃ���K�X��������ƂȂ��ǂ���������܂���B
-�f�[�^�x�[�X�͎����ō쐬���邽�߁A���O�ɍ쐬����K�v�͂���܂���B
-Google App Engine ����A�N�Z�X���邽�߂̃��[�U���쐬���Ă����Ă��������B
+次に、Google Cloud SQL の設定を行います。
+MySQL サーバを立ち上げてください。設定はデフォルトのままで問題ありませんが、
+パフォーマンス等を見ながら適宜調整するとなお良いかもしれません。
+データベースは自動で作成するため、事前に作成する必要はありません。
+Google App Engine からアクセスするためのユーザを作成しておいてください。
 
-���ɁA�v���W�F�N�g�� server/config.py ��ҏW���܂��B
-�f�t�H���g�ł͑S�ċ󗓂ɂȂ��Ă��邽�߁A
-��قǐݒ肵���p�X���[�h����ݒ肵�Ă��������B
+次に、プロジェクトの server/config.py を編集します。
+デフォルトでは全て空欄になっているため、
+先ほど設定したパスワード等を設定してください。
 
-�Ō�ɁAGoogle App Engine �Ƀv���W�F�N�g���f�v���C���܂��B
-���Ԃ����邽�߁A�ȉ��̏��Ԃɏ]���Ă��������B
+最後に、Google App Engine にプロジェクトをデプロイします。
+順番があるため、以下の順番に従ってください。
 > "gcloud app deploy app.yaml
 gcloud app deploy queue.yaml
 gcloud app deploy cron.yaml"
 
-cron �� TaskQueue �Ƀf�[�^�����̃��N�G�X�g���������A
-�����A�����������s���Ă����܂��B
+cron で TaskQueue にデータ同期のリクエストが投げられ、
+順次、同期処理が行われていきます。
 
-�����グ��R�C���m�[�h��ύX����΁A�����̕ύX���K�v�ƂȂ邩������܂��񂪁A
-���̃A���g�R�C���ł������\��������܂��B
+立ち上げるコインノードを変更すれば、多少の変更が必要となるかもしれませんが、
+他のアルトコインでも動く可能性があります。
 
-## �A����
+## 連絡先
 
-���₢���킹�A���v�]�A�o�O�񍐓��́Agithub �� issue �ւ��C�y�ɂǂ����B
+お問い合わせ、ご要望、バグ報告等は、github の issue へお気軽にどうぞ。
 https://github.com/vippool/clerk/issues
 
-�������́A�J���`�[���܂Ń��[�����������Ă��\���܂���B
+もしくは、開発チームまでメールいただいても構いません。
 dev-team@vippool.net
 
-## ���C�Z���X
+## ライセンス
 
 (C) 2019-2019 VIPPOOL Inc.
 
-���̃v���W�F�N�g�́AMIT ���C�Z���X�Œ񋟂���܂��B
+このプロジェクトは、MIT ライセンスで提供されます。
