@@ -37,12 +37,12 @@ ECDSA 署名を作成し、再度 API を呼び出すことで、トランザク
 
 まず、コインノードを 1 台立ち上げます。
 コインノードの conf ファイルには、以下の記載を加えてください。
-> "server=1
-rpcuser=ユーザ名
-rpcpassword=パスワード
-rpcport=ポート番号
-rpcallowip=0.0.0.0/0
-txindex=1"
+> server=1
+> rpcuser=ユーザ名
+> rpcpassword=パスワード
+> rpcport=ポート番号
+> rpcallowip=0.0.0.0/0
+> txindex=1
 
 rpcallowip は、Google App Engine サーバがどこからアクセスするかわからないため、
 必要です。仮想ネットワークを構築して、ローカル IP アドレスに限定しても良いです。
@@ -60,9 +60,9 @@ Google App Engine からアクセスするためのユーザを作成してお�
 
 最後に、Google App Engine にプロジェクトをデプロイします。
 順番があるため、以下の順番に従ってください。
-> "gcloud app deploy app.yaml
-gcloud app deploy queue.yaml
-gcloud app deploy cron.yaml"
+> gcloud app deploy app.yaml
+> gcloud app deploy queue.yaml
+> gcloud app deploy cron.yaml
 
 cron で TaskQueue にデータ同期のリクエストが投げられ、
 順次、同期処理が行われていきます。
@@ -72,10 +72,10 @@ cron で TaskQueue にデータ同期のリクエストが投げられ、
 
 ## 連絡先
 
-お問い合わせ、ご要望、バグ報告等は、github の issue へお気軽にどうぞ。
+お問い合わせ、ご要望、バグ報告等は、github の issue へお気軽にどうぞ。  
 https://github.com/vippool/clerk/issues
 
-もしくは、開発チームまでメールいただいても構いません。
+もしくは、開発チームまでメールいただいても構いません。  
 dev-team@vippool.net
 
 ## ライセンス
