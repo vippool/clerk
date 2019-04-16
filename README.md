@@ -1,5 +1,7 @@
 # vippool-clerk
 
+English: [README.en.md](README.en.md)
+
 このプロジェクトは、Google App Engine で動作する、
 ブロックチェーンの情報取得・トランザクション作成の補助を行うアプリケーションです。
 
@@ -25,7 +27,7 @@ ECDSA 署名を作成し、再度 API を呼び出すことで、トランザク
 
 ## API の使用方法
 
-公開している API については、doc/api.md に API ごとのマニュアルがありますので、
+公開している API については、[doc/api.md](doc/api.md) に API ごとのマニュアルがありますので、
 そちらを参照してください。
 
 ## インストール方法
