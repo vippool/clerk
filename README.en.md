@@ -38,11 +38,11 @@ Before installing you need to make sure you have the following prerequisites:
 
 First, we need to launch one instance of the coin node server.
 Please add the following line to the node server's "conf" file:
-> server=1
-> rpcuser=ユーザ名
-> rpcpassword=パスワード
-> rpcport=ポート番号
-> rpcallowip=0.0.0.0/0
+> server=1  
+> rpcuser=xxxxx  
+> rpcpassword=xxxxx  
+> rpcport=xxxx  
+> rpcallowip=0.0.0.0/0  
 > txindex=1
 
 rpcallowip is required because Google App Engine does not know how to get to the server.
@@ -60,8 +60,8 @@ It is empty by default, so you need to fill in the same password, etc. than in t
 
 Finally, we deploy the project on Google App Engine.
 There is an order to respect, so please proceed as explained below:
-> gcloud app deploy app.yaml
-> gcloud app deploy queue.yaml
+> gcloud app deploy app.yaml  
+> gcloud app deploy queue.yaml  
 > gcloud app deploy cron.yaml
 
 TaskQueue sends sync requests from cron, and thus the synchronization is done regularly.
