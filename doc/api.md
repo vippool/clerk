@@ -1,6 +1,17 @@
 # API document
 
-以下、引数 `coind_type` は `monacoind`, `monacoind_test` のいずれかを選択します。
+## Terms of Use
+
+All users shall use the API in accordance with this Terms of Use.
+
+1. You may use the API free of charge.
+2. THE API IS PROVIDED "AS IS" WITHOUT ANY WARRANTIES OR INDEMNITIES. YOU SHALL, WITHOUT EXCEPTION, BEAR RESPONSIBILITY FOR ANY USE OF THE API. VIPPOOL SHALL NOT IN ANY WAY BE RESPONSIBLE OR LIABLE FOR ANY LOSSES OR DAMAGES AS A RESULT OF USING THE API.
+3. You shall not, directly or indirectly, take any of the following actions;  
+A)	Actions which may or will violate laws and regulations;  
+B)	Actions which may or will be contrary to public order or morality;  
+C)	Actions which may or will infringe the right of a third party;  
+D)	Actions which may or will interfere or obstruct VIPPOOL’s business or interest.
+4. VIPPOOL may block your use of the API or terminate the vippool-clerk service without notification to you, for any reason, at VIPPOOL’s discretion.
 
 ## API の利用条件
 
@@ -10,7 +21,6 @@
 当社は一切の責任を負いません。
 
 法令違反、公序良俗違反、他人の権利を侵害する行為またはそのおそれがある行為に関連して利用することは禁止されます。
-
 当社の業務妨害や利益を害する利用は禁止されます。
 
 当社の判断により、理由の如何を問わず、ユーザーに通知なく、APIによる接続遮断や運用停止することができます。
@@ -18,6 +28,8 @@
 ## 接続先
 
 API 実行時は `clerk.vippool.net` へ HTTPS で接続します。
+
+以下、引数 `coind_type` は `monacoind`, `monacoind_test` のいずれかを選択します。
 
 ## エラー発生時
 
