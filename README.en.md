@@ -22,7 +22,7 @@ There are two stages in transaction creation:
 1. the API is called a first time and returns a hash, which is then, on the client side, signed by ECDSA.
 2. and the API is called again, then the transaction is complete.
 
-Thus, the electronic signature is happening on the client side,
+Thus, the electronic signature happens on the client side,
 reducing the risk of compromission of the private key.
 
 ## API usage
