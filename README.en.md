@@ -27,7 +27,7 @@ reducing the risk of compromission of the private key.
 
 ## API usage
 
-About the public API, please refer to the manual included in [doc/api.md](doc/api.md).
+About the public API, please refer to the manual included in [doc/api.en.md](doc/api.en.md).
 
 ## Installing
 
