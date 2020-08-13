@@ -1,6 +1,6 @@
-﻿runtime: python27
-threadsafe: true
-api_version: 1
+﻿runtime: python38
+# threadsafe: true
+# api_version: 1
 instance_class: F4
 
 automatic_scaling:
@@ -9,14 +9,16 @@ automatic_scaling:
 
 handlers:
 - url: /api/v1/.*
-  script: main.app
+  # script: main.app
+  script: auto
 
 - url: /maintain/.*
-  script: main.app
+  # script: main.app
+  script: auto
   login: admin
 
-libraries:
-- name: MySQLdb
-  version: "latest"
-- name: pycrypto
-  version: "latest"
+# libraries:
+# - name: MySQLdb
+#   version: "latest"
+# - name: pycrypto
+#   version: "latest"
