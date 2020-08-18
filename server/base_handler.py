@@ -40,3 +40,4 @@ class BaseHandler():
 
 	def write_json( self, r ):
 		return json.dumps(r)
+	

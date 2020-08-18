@@ -72,17 +72,6 @@ def submittransaction():
     return submittx.handler().get(request)
 
 # base_handle.pyのhandle_exception代わり
-## エラーハンドル用API
-@app.route("/err-handle")
-def error():
-    status = request.args.get("status")
-
-    if status is None:
-        abort(400, "default abort")
-    else:
-        abort(int(status), "hello abort")
-    return jsonify({"message": "hello"})
-
 ## 各ステータスのエラーハンドラー (404以外ロギング)
 @app.errorhandler(400)
 def error_400(e):
