@@ -41,6 +41,7 @@ import submittx
 
 app = Flask(__name__)
 
+# CORSの設定
 @app.after_request
 def after_request(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
@@ -84,6 +85,34 @@ def preparetransaction():
 @app.route("/api/v1/submittx")
 def submittransaction():
     return submittx.handler().get(request)
+
+# base_handle.pyのhandle_exception代わり
+# エラーハンドル用API
+@app.route("/err-handle")
+def error():
+    status = request.args.get("status")
+
+    if status is None:
+        abort(400, "default abort")
+    else:
+        abort(int(status), "hello abort")
+    return jsonify({"message": "hello"})
+
+# 各ステータスのエラーハンドラー (404以外ロギング)
+@app.errorhandler(400)
+def error_400(e):
+    logging.exception(e)
+    return jsonify({"exception": "Exception", "type": e.name, "args": e.description})
+
+@app.errorhandler(404)
+def error_404(e):
+    return jsonify({"exception": "Exception", "type": e.name, "args": e.description})
+
+@app.errorhandler(500)
+def error_500(e):
+    logging.exception(e)
+    return jsonify({"exception": "Exception", "type": e.name, "args": e.description})
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=8888, threaded=True)
