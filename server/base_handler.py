@@ -42,11 +42,7 @@ class BaseHandler( webapp2.RequestHandler ):
 			return default
 
 	def write_json( self, r ):
-		self.response.headers['Access-Control-Allow-Origin'] = '*'
-		self.response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-		self.response.headers['Access-Control-Allow-Headers'] = '*'
-		self.response.headers['Content-Type'] = 'application/json'
-		self.response.write( json.dumps(r) )
+		return json.dumps(r)
 
 	def handle_exception( self, exception, debug ):
 		# デフォルトではバックトレース有効
