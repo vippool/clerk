@@ -6,9 +6,7 @@
 #                                                        #
 #========================================================#
 
-import webapp2
 from flask import *
-import json
 import logging
 
 import update_db
@@ -23,23 +21,6 @@ import getaddress
 import preparetx
 import submittx
 
-# app = webapp2.WSGIApplication([
-# 	# 公開 API
-# 	('/api/v1/recentblkid', getrecentblkid.handler),
-# 	('/api/v1/block', getblock.handler),
-# 	('/api/v1/recenttxid', getrecenttxid.handler),
-# 	('/api/v1/transaction', gettransaction.handler),
-# 	('/api/v1/balance', getbalance.handler),
-# 	('/api/v1/millionaires', getmillionaires.handler),
-# 	('/api/v1/address', getaddress.handler),
-# 	('/api/v1/preparetx', preparetx.handler),
-# 	('/api/v1/submittx', submittx.handler),
-
-# 	# 非公開 API
-# 	('/maintain/sendrawtransaction', sendrawtransaction.handler),
-# 	('/maintain/cron/update_db', update_db.handler)
-# ])
-
 app = Flask(__name__)
 
 # CORSの設定
@@ -51,6 +32,9 @@ def after_request(response):
     response.headers.add("Content-Type", "application/json")
     return response
 
+# 各APIのハンドラー
+## return以後の呼び出しについては以下デモレポジトリ参照
+## https://github.com/ry0y4n/clerk-flask
 @app.route("/api/v1/recentblkid")
 def recentblkid():
     return getrecentblkid.handler().get(request)
@@ -88,7 +72,7 @@ def submittransaction():
     return submittx.handler().get(request)
 
 # base_handle.pyのhandle_exception代わり
-# エラーハンドル用API
+## エラーハンドル用API
 @app.route("/err-handle")
 def error():
     status = request.args.get("status")
@@ -99,7 +83,7 @@ def error():
         abort(int(status), "hello abort")
     return jsonify({"message": "hello"})
 
-# 各ステータスのエラーハンドラー (404以外ロギング)
+## 各ステータスのエラーハンドラー (404以外ロギング)
 @app.errorhandler(400)
 def error_400(e):
     logging.exception(e)
@@ -113,7 +97,6 @@ def error_404(e):
 def error_500(e):
     logging.exception(e)
     return jsonify({"exception": "Exception", "type": e.name, "args": e.description})
-
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=8888, threaded=True)

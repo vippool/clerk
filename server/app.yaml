@@ -1,28 +1,20 @@
-﻿### python3でデプロイするとエラーを返す非推奨フィールドをコメントアウト
+﻿"""
+- python3でデプロイするとエラーを返す非推奨フィールドをコメントアウト
+- 静的ハンドラを使用するにはscriptをautoに設定する
+- librariesも非推奨で、代わりにrequirements.txtに依存関係を記述する
+"""
 runtime: python38
-# threadsafe: true
-# api_version: 1
+
 instance_class: F4
 
 automatic_scaling:
   min_idle_instances: 1
   max_idle_instances: automatic
 
-
-### 静的ハンドラを使用するにはscriptをautoに設定する
 handlers:
 - url: /api/v1/.*
-  # script: main.app
   script: auto
 
 - url: /maintain/.*
-  # script: main.app
   script: auto
   login: admin
-
-### librariesも非推奨で、代わりにrequirements.txtに依存関係を記述する
-# libraries:
-# - name: MySQLdb
-#   version: "latest"
-# - name: pycrypto
-#   version: "latest"
