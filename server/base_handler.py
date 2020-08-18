@@ -7,7 +7,7 @@
 #========================================================#
 
 import webapp2
-import logging
+# import logging
 import json
 from coind import coind_factory
 

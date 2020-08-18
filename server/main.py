@@ -9,6 +9,7 @@
 import webapp2
 from flask import *
 import json
+import logging
 
 import update_db
 import sendrawtransaction
