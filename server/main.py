@@ -47,6 +47,7 @@ def after_request(response):
     response.headers.add("Access-Control-Allow-Headers", "*")
     response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     response.headers.add("Content-Type", "application/json")
+	return response
 
 @app.route("/api/v1/recentblkid")
 def recentblkid():
