@@ -19,7 +19,8 @@ class ValidationError( Exception ):
 
 class BaseHandler( webapp2.RequestHandler ):
 	def get_request_coind_type( self ):
-		coind_type = self.request.get('coind_type')
+		# coind_type = self.request.get('coind_type')
+		coind_type = request.args.get("coind_type")
 
 		# ベリファイのためにクライアントを構築してみる
 		try:
