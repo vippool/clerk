@@ -41,6 +41,13 @@ import submittx
 
 app = Flask(__name__)
 
+@app.after_request
+def after_request(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "*")
+    response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    response.headers.add("Content-Type", "application/json")
+
 @app.route("/api/v1/recentblkid")
 def recentblkid():
     return getrecentblkid.handler().get(request)
