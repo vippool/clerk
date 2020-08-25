@@ -64,12 +64,12 @@ class handler( BaseHandler ):
 	def make_vout( script, value ):
 		return bytearray( pack( '<Q', value ) ) + var_int( len( script ) ) + script
 
-	def get( self ):
-		coind_type = self.get_request_coind_type()
+	def get( self, request ):
+		coind_type = self.get_request_coind_type(request)
 
 		# パラメータを取得する
 		try:
-			params = json.loads( self.request.get( 'params' ) )
+			params = json.loads( request.args.get( 'params' ) )
 		except ValueError as e:
 			raise ValidationError( 'params', e.message )
 
@@ -206,7 +206,7 @@ class handler( BaseHandler ):
 		vout_n += 1
 
 		# vout[1] (おつり出力) の作成
-		rem = long( input_value - (value + fee) * SATOSHI_COIN )
+		rem = int( input_value - (value + fee) * SATOSHI_COIN )
 		if rem != 0:
 			vout_lt = vout_lt + self.make_vout( self.make_script( from_hash, from_pk, max( vin_reqSigs ) ), rem )
 			vout_n += 1

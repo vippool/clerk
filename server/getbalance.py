@@ -15,11 +15,11 @@ import json
 import time
 
 class handler( BaseHandler ):
-	def get( self ):
-		coind_type = self.get_request_coind_type()
-		addresses = self.request.get('addresses')
-		offset = self.get_request_int('offset', 0)
-		limit = self.get_request_int('limit', None)
+	def get( self, request ):
+		coind_type = self.get_request_coind_type(request)
+		addresses = request.args.get('addresses')
+		offset = self.get_request_int(request, 'offset', 0)
+		limit = self.get_request_int(request, 'limit', None)
 
 		# アドレス json を解析する
 		try:

@@ -15,10 +15,10 @@ import base64
 import bz2
 
 class handler( BaseHandler ):
-	def get( self ):
-		coind_type = self.get_request_coind_type()
-		txid = self.request.get('txid')
-		height = self.request.get('height', None)
+	def get( self, request ):
+		coind_type = self.get_request_coind_type(repr)
+		txid = request.args.get('txid')
+		height = request.args.get('height', None)
 
 		db = CloudSQL( coind_type )
 		with db as c:
