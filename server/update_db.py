@@ -568,9 +568,9 @@ class handler( BaseHandler ):
 	def get( self ):
 		self.add_taskqueue( 'update-main-db-monacoind', 'monacoind', 7000 )
 		self.add_taskqueue( 'update-main-db-monacoind-test', 'monacoind_test', 7000 )
-		self.response.write( "OK" )
+		return "OK"
 
-	def post( self ):
-		coind_type = self.get_request_coind_type()
-		max_leng = self.get_request_int( 'max_leng', 7000 )
-		self.response.write( json.dumps( run( coind_type, max_leng ) ) )
+	def post( self, request ):
+		coind_type = self.get_request_coind_type(request)
+		max_leng = self.get_request_int( request, 'max_leng', 7000 )
+		return json.dumps( run( coind_type, max_leng ) )
