@@ -230,7 +230,7 @@ def sync( db, coind_type, max_leng ):
 						continue
 
 					# 該当アドレスの情報がなければ先に 0 クリア
-					if not alter_balance.has_key( addr ):
+					if not addr in alter_balance:
 						alter_balance[addr] = 0
 
 					# どちらにヒットしたかによって増減表を更新する
