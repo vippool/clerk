@@ -17,7 +17,10 @@ class ValidationError( Exception ):
 
 class BaseHandler():
 	def get_request_coind_type( self, request ):
-		coind_type = request.args.get("coind_type")
+		if request.method == "POST":
+		    coind_type = request.json["coind_type"]
+		else:
+		    coind_type = request.args.get("coind_type")
 
 		# ベリファイのためにクライアントを構築してみる
 		try:
