@@ -141,7 +141,7 @@ class handler( BaseHandler ):
 
 		# pub_key の検証
 		if not isinstance( pub_key, str ):
-			raise ValidationError( 'pub_key', 'unicode' )
+			raise ValidationError( 'pub_key', 'str' )
 		if vin_type == 'pubkeyhash':
 			# 形式検査とパース
 			pub_key = parse_pub_key( pub_key, 'pub_key' )
