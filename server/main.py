@@ -67,9 +67,9 @@ def address():
 def preparetransaction():
     return preparetx.handler().get(request)
 
-@app.route("/api/v1/submittx")
+@app.route("/api/v1/submittx", methods=["POST"])
 def submittransaction():
-    return submittx.handler().get(request)
+    return submittx.handler().post(request)
 
 # base_handle.pyのhandle_exception代わり
 ## 各ステータスのエラーハンドラー (404以外ロギング)

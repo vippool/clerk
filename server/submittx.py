@@ -75,12 +75,12 @@ class handler( BaseHandler ):
 
 		return r
 
-	def post( self ):
-		coind_type = self.get_request_coind_type()
+	def post( self, request ):
+		coind_type = self.get_request_coind_type(request)
 
 		# パラメータを取得する
 		try:
-			params = json.loads( self.request.get( 'params' ) )
+			params = request.json["params"]
 		except ValueError as e:
 			raise ValidationError( 'params', e.message )
 
@@ -140,7 +140,7 @@ class handler( BaseHandler ):
 
 
 		# pub_key の検証
-		if not isinstance( pub_key, unicode ):
+		if not isinstance( pub_key, str ):
 			raise ValidationError( 'pub_key', 'unicode' )
 		if vin_type == 'pubkeyhash':
 			# 形式検査とパース
