@@ -71,6 +71,18 @@ def preparetransaction():
 def submittransaction():
     return submittx.handler().post(request)
 
+# 非公開API
+@app.route("/maintain/sendrawtransaction", methods=["POST"])
+def sendrawtx():
+    return sendrawtransaction.handler().post(request)
+
+@app.route("/maintain/cron/update_db", methods=["GET", "POST"])
+def updateDb():
+    if request.method == "GET":
+        return update_db.handler().get(request)
+    else:
+        return update_db.handler().post(request)
+
 # base_handle.pyのhandle_exception代わり
 ## 各ステータスのエラーハンドラー (404以外ロギング)
 @app.errorhandler(400)
