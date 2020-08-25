@@ -71,7 +71,7 @@ class handler( BaseHandler ):
 		try:
 			params = json.loads( request.args.get( 'params' ) )
 		except ValueError as e:
-			raise ValidationError( 'params', e.message )
+			raise ValidationError( 'params', e.msg )
 
 		# パラメータを分解する
 		params_from = params['from']
@@ -158,7 +158,7 @@ class handler( BaseHandler ):
 				if len( data ) > 75:
 					raise ValidationError( 'data', 'len' )
 			except TypeError as e:
-				raise ValidationError( 'data', e.message )
+				raise ValidationError( 'data', e.msg )
 
 
 		# 入力トランザクションの検索

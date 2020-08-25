@@ -25,7 +25,7 @@ class handler( BaseHandler ):
 		try:
 			addresses = ' '.join( json.loads( addresses ) )
 		except ValueError as e:
-			raise ValidationError( 'addresses', e.message )
+			raise ValidationError( 'addresses', e.msg )
 
 		db = CloudSQL( coind_type )
 		with db as c:

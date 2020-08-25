@@ -82,7 +82,7 @@ class handler( BaseHandler ):
 		try:
 			params = request.json["params"]
 		except ValueError as e:
-			raise ValidationError( 'params', e.message )
+			raise ValidationError( 'params', e.msg )
 
 		sign = params['sign']
 		pub_key = params.get( 'pub_key', u'' )
@@ -92,7 +92,7 @@ class handler( BaseHandler ):
 		try:
 			payload = json.loads( bz2.decompress( b64decode( payload ) ) )
 		except ValueError as e:
-			raise ValidationError( 'params', e.message )
+			raise ValidationError( 'params', e.msg )
 		except Exception as e:
 			raise ValidationError( 'params', 'decompress' )
 
@@ -104,7 +104,7 @@ class handler( BaseHandler ):
 		try:
 			payload = json.loads( payload['body'] )
 		except ValueError as e:
-			raise ValidationError( 'params', e.message )
+			raise ValidationError( 'params', e.msg )
 
 		# payload を分解
 		vin_txid = payload['vin_txid']
@@ -136,7 +136,7 @@ class handler( BaseHandler ):
 				try:
 					unhexlify( e )
 				except TypeError as e:
-					raise ValidationError( 'sign', e.message )
+					raise ValidationError( 'sign', e.msg )
 
 
 		# pub_key の検証

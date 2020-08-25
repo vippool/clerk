@@ -117,7 +117,7 @@ def parse_pub_key( pub_key, elem ):
 	try:
 		b = bytearray( unhexlify( pub_key ) )
 	except TypeError as e:
-		raise ValidationError( elem, e.message )
+		raise ValidationError( elem, e.msg )
 
 	# プレフィックスがないものは論外
 	if len( b ) < 1:

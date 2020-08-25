@@ -8,6 +8,7 @@
 
 from flask import *
 import logging
+from base_handler import ValidationError
 
 import update_db
 import sendrawtransaction
@@ -98,6 +99,10 @@ def error_404(e):
 def error_500(e):
     logging.exception(e)
     return jsonify({"exception": "Exception", "type": e.name, "args": e.description})
+
+@app.errorhandler(ValidationError)
+def validationError(e):
+    return jsonify({"exception": "validation", "msg": e.msg, "element": e.element})
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=8888, threaded=True)

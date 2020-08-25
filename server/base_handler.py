@@ -26,7 +26,7 @@ class BaseHandler():
 		try:
 			cd = coind_factory( coind_type )
 		except Exception as e:
-			raise ValidationError( 'coind_type', e.message )
+			raise ValidationError( 'coind_type', e.args[0] )
 
 		return coind_type
 
