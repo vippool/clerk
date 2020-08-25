@@ -13,7 +13,6 @@ from base_handler import BaseHandler
 from datetime import datetime
 from util import SATOSHI_COIN
 from util import CVE_2018_17144
-import webapp2
 import base64
 import logging
 import bz2

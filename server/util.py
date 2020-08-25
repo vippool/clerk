@@ -34,7 +34,7 @@ def b58encode( src ):
 	mapping = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 	r = ''
-	n = long( hexlify( src ), 16 )
+	n = int( hexlify( src ), 16 )
 	for i in range( 0, ADDRESS_LENGTH ):
 		r = mapping[n % 58] + r
 		n = n / 58
@@ -65,7 +65,7 @@ def b58decode( src, elem ):
 	if len( src ) != ADDRESS_LENGTH:
 		raise ValidationError( elem, 'len' )
 
-	n = long()
+	n = int()
 	for i in range( 0, ADDRESS_LENGTH ):
 		x = ord( src[i] )
 		if x < 0 or x > 255:
