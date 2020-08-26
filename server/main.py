@@ -104,5 +104,9 @@ def error_500(e):
 def validationError(e):
     return jsonify({"exception": "validation", "msg": e.msg, "element": e.element})
 
+@app.errorhandler(Exception)
+def validationError(e):
+    return jsonify({"exception": "Exception", "msg": e.args, "type": e.__doc__})
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=8888, threaded=True)
