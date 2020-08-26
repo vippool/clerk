@@ -31,7 +31,10 @@ class BaseHandler():
 		return coind_type
 
 	def get_request_int( self, request, name, default = None ):
-		n = request.args.get(name)
+		if request.method == "POST":
+			n = request.json[name]
+		else:
+			n = request.args.get(name)
 
 		if n is None:
 			return default
