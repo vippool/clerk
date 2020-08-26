@@ -13,7 +13,6 @@ from base_handler import BaseHandler
 from datetime import datetime
 from util import SATOSHI_COIN
 from util import CVE_2018_17144
-import webapp2
 import base64
 import logging
 import bz2
@@ -230,7 +229,7 @@ def sync( db, coind_type, max_leng ):
 						continue
 
 					# 該当アドレスの情報がなければ先に 0 クリア
-					if not alter_balance.has_key( addr ):
+					if not addr in alter_balance:
 						alter_balance[addr] = 0
 
 					# どちらにヒットしたかによって増減表を更新する
@@ -568,9 +567,9 @@ class handler( BaseHandler ):
 	def get( self ):
 		self.add_taskqueue( 'update-main-db-monacoind', 'monacoind', 7000 )
 		self.add_taskqueue( 'update-main-db-monacoind-test', 'monacoind_test', 7000 )
-		self.response.write( "OK" )
+		return "OK"
 
-	def post( self ):
-		coind_type = self.get_request_coind_type()
-		max_leng = self.get_request_int( 'max_leng', 7000 )
-		self.response.write( json.dumps( run( coind_type, max_leng ) ) )
+	def post( self, request ):
+		coind_type = self.get_request_coind_type(request)
+		max_leng = self.get_request_int( request, 'max_leng', 7000 )
+		return json.dumps( run( coind_type, max_leng ) )

@@ -1,6 +1,10 @@
-﻿runtime: python27
-threadsafe: true
-api_version: 1
+﻿"""
+- python3でデプロイするとエラーを返す非推奨フィールドを削除
+- 静的ハンドラを使用するにはscriptをautoに設定する
+- librariesも非推奨で、代わりにrequirements.txtに依存関係を記述する
+"""
+runtime: python38
+
 instance_class: F4
 
 automatic_scaling:
@@ -9,14 +13,8 @@ automatic_scaling:
 
 handlers:
 - url: /api/v1/.*
-  script: main.app
+  script: auto
 
 - url: /maintain/.*
-  script: main.app
+  script: auto
   login: admin
-
-libraries:
-- name: MySQLdb
-  version: "latest"
-- name: pycrypto
-  version: "latest"

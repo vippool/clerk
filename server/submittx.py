@@ -34,10 +34,10 @@ class handler( BaseHandler ):
 		# S が楕円曲線群の位数 N の半分より大きければ、N-S を S' として使用する
 		# - 必ず最上位ビットが落ちるので 1 バイト節約できるらしい
 		# - S'=N-S としても、署名検証時に楕円曲線上の点が上下反転するだけで X 座標は変化しないため正常に検証を pass する
-		sn = long( sign[64:128], 16 )
-		lim = long( "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0", 16 )
+		sn = int( sign[64:128], 16 )
+		lim = int( "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0", 16 )
 		if sn >= lim:
-			sn = long( "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16 ) - sn
+			sn = int( "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16 ) - sn
 			s = unhexlify( '%064X' % sn )
 
 		# 0 で始まるバイトは省略する
@@ -75,14 +75,14 @@ class handler( BaseHandler ):
 
 		return r
 
-	def post( self ):
-		coind_type = self.get_request_coind_type()
+	def post( self, request ):
+		coind_type = self.get_request_coind_type(request)
 
 		# パラメータを取得する
 		try:
-			params = json.loads( self.request.get( 'params' ) )
+			params = request.json["params"]
 		except ValueError as e:
-			raise ValidationError( 'params', e.message )
+			raise ValidationError( 'params', e.msg )
 
 		sign = params['sign']
 		pub_key = params.get( 'pub_key', u'' )
@@ -92,7 +92,7 @@ class handler( BaseHandler ):
 		try:
 			payload = json.loads( bz2.decompress( b64decode( payload ) ) )
 		except ValueError as e:
-			raise ValidationError( 'params', e.message )
+			raise ValidationError( 'params', e.msg )
 		except Exception as e:
 			raise ValidationError( 'params', 'decompress' )
 
@@ -104,7 +104,7 @@ class handler( BaseHandler ):
 		try:
 			payload = json.loads( payload['body'] )
 		except ValueError as e:
-			raise ValidationError( 'params', e.message )
+			raise ValidationError( 'params', e.msg )
 
 		# payload を分解
 		vin_txid = payload['vin_txid']
@@ -136,12 +136,12 @@ class handler( BaseHandler ):
 				try:
 					unhexlify( e )
 				except TypeError as e:
-					raise ValidationError( 'sign', e.message )
+					raise ValidationError( 'sign', e.msg )
 
 
 		# pub_key の検証
-		if not isinstance( pub_key, unicode ):
-			raise ValidationError( 'pub_key', 'unicode' )
+		if not isinstance( pub_key, str ):
+			raise ValidationError( 'pub_key', 'str' )
 		if vin_type == 'pubkeyhash':
 			# 形式検査とパース
 			pub_key = parse_pub_key( pub_key, 'pub_key' )
@@ -151,11 +151,11 @@ class handler( BaseHandler ):
 		if vin_type == 'pubkeyhash':
 			for i in range( 0, len( hash ) ):
 				# 署名対象ハッシュ値を数値に
-				h = long( hash[i]['hash'], 16 )
+				h = int( hash[i]['hash'], 16 )
 
 				# 署名をパース
-				sig_r = long( sign[i][0][0:64], 16 )
-				sig_s = long( sign[i][0][64:128], 16 )
+				sig_r = int( sign[i][0][0:64], 16 )
+				sig_s = int( sign[i][0][64:128], 16 )
 
 				# 公開鍵をパース
 				pk_x, pk_y = ecdsa.decompress( pub_key )
@@ -165,15 +165,15 @@ class handler( BaseHandler ):
 		elif vin_type == 'multisig':
 			for i in range( 0, len( hash ) ):
 				# 署名対象ハッシュ値を数値に
-				h = long( hash[i]['hash'], 16 )
+				h = int( hash[i]['hash'], 16 )
 
 				# 何番目の公開鍵まで走査したか
 				k = 0
 
 				for e in sign[i]:
 					# 署名をパース
-					sig_r = long( e[0:64], 16 )
-					sig_s = long( e[64:128], 16 )
+					sig_r = int( e[0:64], 16 )
+					sig_s = int( e[64:128], 16 )
 
 					while True:
 						# 有効な公開鍵があるか

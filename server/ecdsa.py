@@ -12,20 +12,20 @@ from os import urandom
 
 # secp256k1 曲線のパラメータ
 ec_prm_l = 256
-ec_prm_p = long( 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F', 16 )
-ec_prm_a = long( '0000000000000000000000000000000000000000000000000000000000000000', 16 )
-ec_prm_b = long( '0000000000000000000000000000000000000000000000000000000000000007', 16 )
-ec_prm_n = long( 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141', 16 )
-ec_point_g_x = long( '79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798', 16 )
-ec_point_g_y = long( '483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8', 16 )
+ec_prm_p = int( 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F', 16 )
+ec_prm_a = int( '0000000000000000000000000000000000000000000000000000000000000000', 16 )
+ec_prm_b = int( '0000000000000000000000000000000000000000000000000000000000000007', 16 )
+ec_prm_n = int( 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141', 16 )
+ec_point_g_x = int( '79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798', 16 )
+ec_point_g_y = int( '483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8', 16 )
 
 # モンゴメリ乗算を行うためのパラメータ
-mng_prm_d = long( 'C9BD1905155383999C46C2C295F2B761BCB223FEDC24A059D838091DD2253531', 16 )
-mng_prm_s = long( '1000007a2000e90a1', 16 )
-mng_prm_m = long( 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', 16 )
+mng_prm_d = int( 'C9BD1905155383999C46C2C295F2B761BCB223FEDC24A059D838091DD2253531', 16 )
+mng_prm_s = int( '1000007a2000e90a1', 16 )
+mng_prm_m = int( 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', 16 )
 
 # 曲線の係数体上で非平方数となる値の１例
-sqrt_b = long( 3 )
+sqrt_b = int( 3 )
 
 
 # x の y に対する逆元を求める
@@ -70,7 +70,7 @@ def sqrt( x, y ):
 	r = pow( x, (t + 1) / 2, y )
 
 	for i in range( s - 2, -1, -1 ):
-		n = long( 1 ) << i
+		n = int( 1 ) << i
 		d = pow( r * r * xi, n, y )
 		if d != 1:
 			r = r * b % y
@@ -266,22 +266,22 @@ class ec_point:
 		# 位数をかけると無限遠点に飛ぶ
 		r = p.scalar( ec_prm_n )
 		x, y = r.affine()
-		print 'x: %064x' % x
-		print 'y: %064x' % y
+		print('x: %064x' % x)
+		print('y: %064x' % y)
 		if x == 0 and y == 0:
-			print 'ok.'
+			print('ok.')
 		else:
-			print 'ng.'
+			print('ng.')
 
 		# 適当な秘密鍵
-		r = p.scalar( long( 'D2E85CC6AC3A6701040D7E9B57F1F24CD748A20626F06F2D5844059D024F5256', 16 ) )
+		r = p.scalar( int( 'D2E85CC6AC3A6701040D7E9B57F1F24CD748A20626F06F2D5844059D024F5256', 16 ) )
 		x, y = r.affine()
-		print 'x: %064x' % x
-		print 'y: %064x' % y
-		if x == long( 'D76F60853013746C8D0160CDCF2630309A2170D105FF6C96503F46A1A0BCC4D8', 16 ) and y == long( '0F9D1C3D8AC0C2D8C589A839E226D60FFD513B3941AC92DC20EDF6EF337BC4E0', 16 ):
-			print 'ok.'
+		print('x: %064x' % x)
+		print('y: %064x' % y)
+		if x == int( 'D76F60853013746C8D0160CDCF2630309A2170D105FF6C96503F46A1A0BCC4D8', 16 ) and y == int( '0F9D1C3D8AC0C2D8C589A839E226D60FFD513B3941AC92DC20EDF6EF337BC4E0', 16 ):
+			print('ok.')
 		else:
-			print 'ng.'
+			print('ng.')
 
 
 # ECDSA 公開鍵の作成
@@ -297,7 +297,7 @@ def sign( hash, privKey ):
 
 	while True:
 		# [ 1, n-1 ] の範囲で乱数を生成する
-		k = long( hexlify( urandom( 32 ) ), 16 )
+		k = int( hexlify( urandom( 32 ) ), 16 )
 		k = (k + 1) % ec_prm_n
 
 		# k * G を計算する
@@ -361,12 +361,12 @@ def decompress( pubKey ):
 
 	# uncompressed 形式の場合は X, Y 座標が連続している
 	if pubKey[0] == 0x04 and len( pubKey ) == 65:
-		x = long( hexlify( pubKey[1:33] ), 16 )
-		y = long( hexlify( pubKey[33:65] ), 16 )
+		x = int( hexlify( pubKey[1:33] ), 16 )
+		y = int( hexlify( pubKey[33:65] ), 16 )
 
 	# compressed 形式の場合は X 座標を取り出してから計算する
 	if (pubKey[0] == 0x02 or pubKey[0] == 0x03) and len( pubKey ) == 33:
-		x = long( hexlify( pubKey[1:33] ), 16 )
+		x = int( hexlify( pubKey[1:33] ), 16 )
 		y_2 = x * x * x + ec_prm_a * x + ec_prm_b
 		y = sqrt( y_2, ec_prm_p )
 
@@ -381,20 +381,20 @@ if __name__ == '__main__':
 	ec_point.selfTest()
 
 	for i in range( 0, 10 ):
-		h = long( hexlify( urandom( 32 ) ), 16 )
-		k = long( hexlify( urandom( 32 ) ), 16 )
+		h = int( hexlify( urandom( 32 ) ), 16 )
+		k = int( hexlify( urandom( 32 ) ), 16 )
 		pkx, pky = pubKey( k )
 
 		# uncompressed 形式
 		s = bytearray( unhexlify( '04%064X%064X' % (pkx, pky) ) )
 		if decompress( s ) != (pkx, pky):
-			print pkx, pky
+			print(pkx, pky)
 
 		# compressed 形式
 		s = bytearray( unhexlify( '%02X%064X' % (2 + (pky & 1), pkx) ) )
 		if decompress( s ) != (pkx, pky):
-			print pkx, pky
+			print(pkx, pky)
 
 		# 署名作成と検証
 		r, s = sign( h, k )
-		print verify( h, r, s, pkx, pky )
+		print(verify( h, r, s, pkx, pky ))

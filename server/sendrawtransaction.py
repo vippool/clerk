@@ -16,15 +16,15 @@ import json
 import bz2
 
 class handler( BaseHandler ):
-	def post( self ):
+	def post( self, request ):
 		logging.getLogger().setLevel( logging.DEBUG )
-		coind_type = self.get_request_coind_type()
+		coind_type = self.get_request_coind_type(request)
 
 		# payload を展開する
 		try:
-			payload = json.loads( bz2.decompress( b64decode( self.request.get( 'payload' ) ) ) )
+			payload = json.loads( bz2.decompress( b64decode( request.json['payload'] ) ) )
 		except ValueError as e:
-			raise ValidationError( 'payload', e.message )
+			raise ValidationError( 'payload', e.msg )
 		except Exception as e:
 			raise ValidationError( 'payload', 'decompress' )
 
@@ -36,7 +36,7 @@ class handler( BaseHandler ):
 		try:
 			payload = json.loads( payload['body'] )
 		except ValueError as e:
-			raise ValidationError( 'payload', e.message )
+			raise ValidationError( 'payload', e.msg )
 
 		# コインノードクライアントの初期化
 		cd = coind_factory( coind_type )

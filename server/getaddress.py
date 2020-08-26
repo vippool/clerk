@@ -12,9 +12,9 @@ from util import encode_coin_address
 from util import parse_pub_key
 
 class handler( BaseHandler ):
-	def get( self ):
-		coind_type = self.get_request_coind_type()
-		pub_key = self.request.get('pub_key')
+	def get( self, request ):
+		coind_type = self.get_request_coind_type(request)
+		pub_key = request.args.get('pub_key')
 
 		# 公開鍵をバイナリ配列にする
 		d1 = parse_pub_key( pub_key, 'pub_key' )

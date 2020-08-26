@@ -10,9 +10,9 @@ from base_handler import BaseHandler
 from cloudsql import CloudSQL
 
 class handler( BaseHandler ):
-	def get( self ):
-		coind_type = self.get_request_coind_type()
-		n = self.get_request_int('n', 10)
+	def get( self, request ):
+		coind_type = self.get_request_coind_type(request)
+		n = self.get_request_int(request, 'n', 10)
 
 		db = CloudSQL( coind_type )
 		with db as c:
