@@ -87,26 +87,20 @@ def updateDb():
 # base_handle.pyのhandle_exception代わり
 ## 各ステータスのエラーハンドラー (404以外ロギング)
 @app.errorhandler(400)
-def error_400(e):
-    logging.exception(e)
-    return jsonify({"exception": "Exception", "type": e.name, "args": e.description})
-
 @app.errorhandler(404)
-def error_404(e):
-    return jsonify({"exception": "Exception", "type": e.name, "args": e.description})
-
 @app.errorhandler(500)
-def error_500(e):
-    logging.exception(e)
-    return jsonify({"exception": "Exception", "type": e.name, "args": e.description})
+def error(e):
+    if e.code != "404":
+        logging.exception(e)
+    return jsonify({"exception": "Exception", "type": e.name, "args": e.description}), e.code
 
 @app.errorhandler(ValidationError)
 def validationError(e):
-    return jsonify({"exception": "validation", "msg": e.msg, "element": e.element})
+    return jsonify({"exception": "validation", "msg": e.msg, "element": e.element}), 400
 
 @app.errorhandler(Exception)
-def validationError(e):
-    return jsonify({"exception": "Exception", "msg": e.args, "type": e.__doc__})
+def exceptionError(e):
+    return jsonify({"exception": "Exception", "msg": e.args, "type": e.__doc__}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=8888, threaded=True)
