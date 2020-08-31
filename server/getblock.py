@@ -20,7 +20,8 @@ class handler( BaseHandler ):
 		height = self.get_request_int(request, 'height', None)
 		hash = request.args.get('hash', None)
 
-		db = CloudSQL( coind_type )
+		connection = CloudSQL( coind_type )
+		db = connection.cursor()
 		with db as c:
 			# ブロックの取得
 			if height is not None:
@@ -54,7 +55,6 @@ class handler( BaseHandler ):
 
 		# コインノードからの生データをパース
 		json_data = json.loads( bz2.decompress( base64.b64decode( blockheader['json'] ) ) )
-
 		# 確認数を更新する
 		json_data['confirmations'] = chain_height - blockheader['height'] + 1
 
@@ -63,4 +63,4 @@ class handler( BaseHandler ):
 		json_data['previousblockhash'] = previousblockhash
 
 		# JSON 形式でシリアライズして返す
-		self.write_json( json_data )
+		return self.write_json( json_data )

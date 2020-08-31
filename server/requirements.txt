@@ -1,2 +1,2 @@
-MySQL-python
+mysqlclient
 pycryptodome

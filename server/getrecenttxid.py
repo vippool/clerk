@@ -16,7 +16,8 @@ class handler( BaseHandler ):
 		coind_type = self.get_request_coind_type(request)
 		n = self.get_request_int( request, 'n', 10 )
 
-		db = CloudSQL( coind_type )
+		connection = CloudSQL( coind_type )
+		db = connection.cursor()
 		with db as c:
 			c.execute( 'SELECT txid, time, height, total_output FROM transaction ORDER BY time DESC LIMIT %s', (n,) )
 
@@ -31,4 +32,4 @@ class handler( BaseHandler ):
 				})
 
 		# JSON にシリアライズして返却
-		self.write_json( r )
+		return self.write_json( r )

@@ -20,7 +20,8 @@ class handler( BaseHandler ):
 		txid = request.args.get('txid')
 		height = request.args.get('height', None)
 
-		db = CloudSQL( coind_type )
+		connection = CloudSQL( coind_type )
+		db = connection.cursor()
 		with db as c:
 			# 現在のブロック高を取得する
 			c.execute( 'SELECT MAX(height) FROM blockheader' )
@@ -80,6 +81,6 @@ class handler( BaseHandler ):
 
 		# JSON 形式でシリアライズして返す
 		if height is None:
-			self.write_json( r )
+			return self.write_json( r )
 		else:
-			self.write_json( r[0] )
+			return self.write_json( r[0] )

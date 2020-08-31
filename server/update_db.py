@@ -426,7 +426,9 @@ def check_db_state( db, coind_type ):
 # データベースの作成とテーブルの作成、初期化を行う
 def init_db( coind_type ):
 	# 一旦標準データベースに接続してデータベースの作成を行う
-	with CloudSQL( 'mysql' ) as c:
+	connection = CloudSQL( 'mysql' )
+	db = connection.cursor()
+	with db as c:
 		# 本来であればプレイスホルダを使用したいところだが、
 		# DB 名は文字列ではないらしい MySQL のクソ仕様のため、
 		# % で SQL 文を組み立てる。coind_type は入力チェックをパスしているため、
@@ -437,7 +439,8 @@ def init_db( coind_type ):
 	# MySQL のクソ仕様により、CREATE TABLE は暗黙コミットされるので
 	# トランザクションの意味はまったくないが、失敗したら手動で
 	# DB ごと消せばいいのでとりあえずこれで
-	db = CloudSQL( coind_type )
+	connection = CloudSQL( coind_type )
+	db = connection.cursor()
 	with db as c:
 		c.execute('''
 			CREATE TABLE state (
@@ -516,7 +519,8 @@ def run( coind_type, max_leng ):
 
 	try:
 		# 指定された coind のデータベースへ接続する
-		db = CloudSQL( coind_type )
+		connection = CloudSQL( coind_type )
+		db = connection.cursor()
 	except MySQLdb.OperationalError:
 		# 接続に失敗した場合、データベースの作成から行う
 		db = init_db( coind_type )
