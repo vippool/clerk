@@ -303,6 +303,8 @@ def sync( db, coind_type, max_leng ):
 def revert( db, coind_type, height ):
 
 	# トランザクション内で実行する
+	connection = CloudSQL( coind_type )
+	db = connection.cursor()
 	with db as c:
 		# ブロックヘッダの確認
 		c.execute( 'SELECT * FROM blockheader WHERE height = %s', (height,) )
@@ -535,16 +537,19 @@ def run( coind_type, max_leng ):
 			raise Exception( 'running another!!' )
 
 	# 開始時のポイントを覚えておく
+	db = connection.cursor()
 	with db as c:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
 		start_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
 
 	# ここで DB 更新作業を行う
+	db = connection.cursor()
 	if check_db_state( db, coind_type ):
 		# 巻き戻しを行わなかった場合のみ更新に進む
 		sync( db, coind_type, max_leng )
 
 	# 終了時のポイントを取得する
+	db = connection.cursor()
 	with db as c:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
 		end_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']

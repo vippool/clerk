@@ -14,7 +14,7 @@ import config
 class coind_base:
 	def run( self, method, params ):
 		header = {
-			'Authorization': 'Basic %s' % base64.standard_b64encode( '%s:%s' % ( self.rpc_user, self.rpc_pass ) )
+			'Authorization': b'Basic %b' % base64.standard_b64encode( b'%b:%b' % ( self.rpc_user.encode(), self.rpc_pass.encode() ) )
 		}
 		body = {
 			'method': method,
