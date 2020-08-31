@@ -13,7 +13,7 @@ import MySQLdb.cursors
 
 def CloudSQL( coind_type ):
 	if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
-		return MySQLdb.connect(
+		connection = MySQLdb.connect(
 			unix_socket = os.path.join( '/cloudsql', config.cloudsql_name ),
 			user = config.cloudsql_user,
 			passwd = config.cloudsql_pass,
@@ -21,8 +21,9 @@ def CloudSQL( coind_type ):
 			cursorclass = MySQLdb.cursors.DictCursor,
 			autocommit = False
 		)
+		return connection.cursor()
 	else:
-		return MySQLdb.connect(
+		connection = MySQLdb.connect(
 			host = '127.0.0.1',
 			user = config.cloudsql_user,
 			passwd = config.cloudsql_pass,
@@ -30,3 +31,4 @@ def CloudSQL( coind_type ):
 			cursorclass = MySQLdb.cursors.DictCursor,
 			autocommit = False
 		)
+		return connection.cursor()
