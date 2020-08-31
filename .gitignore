@@ -105,3 +105,6 @@ venv.bak/
 
 # coin node file
 config.py
+
+# api test file
+api.http
