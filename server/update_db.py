@@ -6,7 +6,7 @@
 #                                                        #
 #========================================================#
 
-from google.appengine.api import taskqueue
+# from google.appengine.api import taskqueue
 from coind import coind_factory
 from cloudsql import CloudSQL
 from base_handler import BaseHandler

@@ -6,7 +6,7 @@
 #                                                        #
 #========================================================#
 
-import httplib
+import http.client
 import base64
 import json
 import config
@@ -20,7 +20,7 @@ class coind_base:
 			'method': method,
 			'params': params
 		}
-		conn = httplib.HTTPConnection( self.rpc_addr, self.rpc_port )
+		conn = http.client.HTTPConnection( self.rpc_addr, self.rpc_port )
 		conn.request( 'POST', '/', json.dumps(body), header )
 		res = conn.getresponse()
 		if res.status == 200:
