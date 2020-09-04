@@ -21,7 +21,7 @@ def CloudSQL( coind_type ):
 			cursorclass = MySQLdb.cursors.DictCursor,
 			autocommit = False
 		)
-		return connection.cursor()
+		return connection
 	else:
 		connection = MySQLdb.connect(
 			host = '127.0.0.1',
@@ -31,4 +31,4 @@ def CloudSQL( coind_type ):
 			cursorclass = MySQLdb.cursors.DictCursor,
 			autocommit = False
 		)
-		return connection.cursor()
+		return connection
