@@ -322,133 +322,96 @@ def revert( conn, coind_type, height ):
 
 	# トランザクション内で実行する
 	# ブロックヘッダの確認
-	db = conn.cursor()
-	db.execute( 'SELECT * FROM blockheader WHERE height = %s', (height,) )
-	block = db.fetchone()
-	db.close()
-	conn.commit()
+	with conn.cursor() as c:
+		c.execute( 'SELECT * FROM blockheader WHERE height = %s', (height,) )
+		block = c.fetchone()
 
-	# ブロックヘッダがない場合は以降の処理は不要
-	if block is None:
-		return False
+		# ブロックヘッダがない場合は以降の処理は不要
+		if block is None:
+			return False
 
-	# ここから巻き戻しを行う
-	logging.debug( '%s: revert() %d.' % (coind_type, height) )
+		# ここから巻き戻しを行う
+		logging.debug( '%s: revert() %d.' % (coind_type, height) )
 
-	# ブロックヘッダは削除する
-	db = conn.cursor()
-	db.execute( 'DELETE FROM blockheader WHERE height = %s', (height,) )
-	if db.rowcount != 1:
-		raise Exception( 'missing blockheader' )
-	db.close()
-	conn.commit()
+		# ブロックヘッダは削除する
+		c.execute( 'DELETE FROM blockheader WHERE height = %s', (height,) )
+		if c.rowcount != 1:
+			raise Exception( 'missing blockheader' )
 
-	# ブロックの json データを読み込む
-	json_block = json.loads( bz2.decompress( base64.b64decode( block['json'] ) ) )
+		# ブロックの json データを読み込む
+		json_block = json.loads( bz2.decompress( base64.b64decode( block['json'] ) ) )
 
-	for txid in reversed( json_block['tx'] ):
-		# トランザクションのデータを取得する
-		db = conn.cursor()
-		db.execute( 'SELECT * FROM transaction WHERE height = %s AND txid = %s', ( height, txid ) )
-		tx = db.fetchone()
-		db.close()
-		conn.commit()
-		if tx is None:
-			raise Exception( 'missing transaction' )
+		for txid in reversed( json_block['tx'] ):
+			# トランザクションのデータを取得する
+			c.execute( 'SELECT * FROM transaction WHERE height = %s AND txid = %s', ( height, txid ) )
+			tx = c.fetchone()
+			if tx is None:
+				raise Exception( 'missing transaction' )
 
-		# json データを読み込む
-		json_tx = json.loads( bz2.decompress( base64.b64decode( tx['json'] ) ) )
+			# json データを読み込む
+			json_tx = json.loads( bz2.decompress( base64.b64decode( tx['json'] ) ) )
 
-		# 残高の変化があったアドレスのリスト
-		# - unique にするために辞書を使う
-		addresses = {}
-		db = conn.cursor()
-		db.execute( 'SELECT addresses FROM transaction_link WHERE (vin_height = %s AND vin_txid = %s) OR (vout_height = %s AND vout_txid = %s)', (height, txid, height, txid) )
-		for e in db.fetchall():
-			if e['addresses'] is not None:
-				addresses[ e['addresses'] ] = True
-		db.close()
-		conn.commit()
-		# トランザクションデータは削除するだけでいい
-		db = conn.cursor()
-		db.execute( 'DELETE FROM transaction WHERE height = %s AND txid = %s', ( height, txid ) )
-		if db.rowcount != 1:
-			raise Exception( height, txid, 'missing transaction' )
-		db.close()
-		conn.commit()
-		# 出力側トランザクションリンクも削除するだけでいい
-		db = conn.cursor()
-		db.execute( 'DELETE FROM transaction_link WHERE vout_height = %s AND vout_txid = %s AND ISNULL( vin_height ) AND ISNULL( vin_txid ) AND ISNULL( vin_idx )', (height, txid) )
-		if db.rowcount != tx['vout_n']:
-			raise Exception( txid, 'missing transaction_link (vout_n)' )
-		db.close()
-		conn.commit()
+			# 残高の変化があったアドレスのリスト
+			# - unique にするために辞書を使う
+			addresses = {}
+			c.execute( 'SELECT addresses FROM transaction_link WHERE (vin_height = %s AND vin_txid = %s) OR (vout_height = %s AND vout_txid = %s)', (height, txid, height, txid) )
+			for e in c.fetchall():
+				if e['addresses'] is not None:
+					addresses[ e['addresses'] ] = True
 
-		# 入力側トランザクションリンクは NULL クリア
-		# - 乱暴に vin_height, vin_txid 一致だけで消して rowcount を無視する手もあるが一応ループを回して確認する。
-		for idx in range( tx['vin_n'] ):
-			if 'txid' in json_tx['vin'][idx]:
-				db = conn.cursor()
-				db.execute( 'UPDATE transaction_link SET vin_height = NULL, vin_txid = NULL, vin_idx = NULL WHERE vin_height = %s AND vin_txid = %s AND vin_idx = %s', (height, txid, idx) )
-				if db.rowcount != 1:
-					if not CVE_2018_17144( coind_type, txid ):
-						raise Exception( height, txid, idx, 'missing transaction_link (vin)' )
-				db.close()
-				conn.commit()
+			# トランザクションデータは削除するだけでいい
+			c.execute( 'DELETE FROM transaction WHERE height = %s AND txid = %s', ( height, txid ) )
+			if c.rowcount != 1:
+				raise Exception( height, txid, 'missing transaction' )
 
-		# 一応関連データが残っていないか確認する
-		db = conn.cursor()
-		db.execute( 'SELECT * FROM transaction_link WHERE (vin_height = %s AND vin_txid = %s) OR (vout_height = %s AND vout_txid = %s)', (height, txid, height, txid) )
-		if len( db.fetchall() ) != 0:
-			raise Exception( height, txid, 'surviving transaction_link' )
-		db.close()
-		conn.commit()
+			# 出力側トランザクションリンクも削除するだけでいい
+			c.execute( 'DELETE FROM transaction_link WHERE vout_height = %s AND vout_txid = %s AND ISNULL( vin_height ) AND ISNULL( vin_txid ) AND ISNULL( vin_idx )', (height, txid) )
+			if c.rowcount != tx['vout_n']:
+				raise Exception( txid, 'missing transaction_link (vout_n)' )
 
-		# 各アドレスの残高を巻き戻す
-		# - 何も考えずに height, txid で一致を取って消してもよかったが、current_balance の更新が必要なので...
-		for addr in addresses.keys():
-			# 残高データの最新シリアル番号を取得する
-			db = conn.cursor()
-			db.execute( 'SELECT MAX(serial) FROM balance WHERE addresses = %s', (addr,) )
-			serial = db.fetchone()['MAX(serial)']
-			db.close()
+			# 入力側トランザクションリンクは NULL クリア
+			# - 乱暴に vin_height, vin_txid 一致だけで消して rowcount を無視する手もあるが一応ループを回して確認する。
+			for idx in range( tx['vin_n'] ):
+				if 'txid' in json_tx['vin'][idx]:
+					c.execute( 'UPDATE transaction_link SET vin_height = NULL, vin_txid = NULL, vin_idx = NULL WHERE vin_height = %s AND vin_txid = %s AND vin_idx = %s', (height, txid, idx) )
+					if c.rowcount != 1:
+						if not CVE_2018_17144( coind_type, txid ):
+							raise Exception( height, txid, idx, 'missing transaction_link (vin)' )
 			conn.commit()
 
-			# 最新の残高を更新する
-			if serial == 0:
-				db = conn.cursor()
-				db.execute( 'DELETE FROM current_balance WHERE addresses = %s', (addr,) )
-				if db.rowcount != 1:
-					raise Exception( height, txid, addr, 'missing current_balance' )
-				db.close()
-				conn.commit()
-			else:
-				db = conn.cursor()
-				db.execute( 'SELECT balance FROM balance WHERE addresses = %s AND serial = %s', (addr, serial - 1) )
-				balance = db.fetchone()['balance']
-				db.close()
-				conn.commit()
+			# 一応関連データが残っていないか確認する
+			c.execute( 'SELECT * FROM transaction_link WHERE (vin_height = %s AND vin_txid = %s) OR (vout_height = %s AND vout_txid = %s)', (height, txid, height, txid) )
+			if len( c.fetchall() ) != 0:
+				raise Exception( height, txid, 'surviving transaction_link' )
 
-				db = conn.cursor()
-				db.execute( 'UPDATE current_balance SET balance = %s WHERE addresses = %s', (balance, addr) )
-				db.close()
-				conn.commit()
+			# 各アドレスの残高を巻き戻す
+			# - 何も考えずに height, txid で一致を取って消してもよかったが、current_balance の更新が必要なので...
+			for addr in addresses.keys():
+				# 残高データの最新シリアル番号を取得する
+				c.execute( 'SELECT MAX(serial) FROM balance WHERE addresses = %s', (addr,) )
+				serial = c.fetchone()['MAX(serial)']
 
-			# 残高データ削除
-			db = conn.cursor()
-			db.execute( 'DELETE FROM balance WHERE addresses = %s AND height = %s AND txid = %s AND serial = %s', (addr, height, txid, serial) )
-			if db.rowcount != 1:
-				raise Exception( height, txid, addr, 'missing balance' )
-			db.close()
+				# 最新の残高を更新する
+				if serial == 0:
+					c.execute( 'DELETE FROM current_balance WHERE addresses = %s', (addr,) )
+					if c.rowcount != 1:
+						raise Exception( height, txid, addr, 'missing current_balance' )
+				else:
+					c.execute( 'SELECT balance FROM balance WHERE addresses = %s AND serial = %s', (addr, serial - 1) )
+					balance = c.fetchone()['balance']
+
+					c.execute( 'UPDATE current_balance SET balance = %s WHERE addresses = %s', (balance, addr) )
+
+				# 残高データ削除
+				c.execute( 'DELETE FROM balance WHERE addresses = %s AND height = %s AND txid = %s AND serial = %s', (addr, height, txid, serial) )
+				if c.rowcount != 1:
+					raise Exception( height, txid, addr, 'missing balance' )
 			conn.commit()
 
-		# 一応関連データが残っていないか確認する
-		db = conn.cursor()
-		db.execute( 'SELECT * FROM balance WHERE height = %s AND txid = %s', (height, txid) )
-		if len( db.fetchall() ) != 0:
-			raise Exception( height, txid, 'surviving balance' )
-		db.close()
-		conn.commit()
+			# 一応関連データが残っていないか確認する
+			c.execute( 'SELECT * FROM balance WHERE height = %s AND txid = %s', (height, txid) )
+			if len( c.fetchall() ) != 0:
+				raise Exception( height, txid, 'surviving balance' )
 
 	return True
 
@@ -494,15 +457,14 @@ def init_db( coind_type ):
 	# トランザクションの意味はまったくないが、失敗したら手動で
 	# DB ごと消せばいいのでとりあえずこれで
 	conn = CloudSQL( coind_type )
-	with conn as c:
-		db = c.cursor()
-		db.execute('''
+	with conn.cursor() as c:
+		c.execute('''
 			CREATE TABLE state (
 				running_flag BOOL NOT NULL,
 				running_time DATETIME
 			)
 		''')
-		db.execute('''
+		c.execute('''
 			CREATE TABLE blockheader (
 				height BIGINT UNSIGNED NOT NULL PRIMARY KEY,
 				hash VARCHAR(128) NOT NULL,
@@ -512,7 +474,7 @@ def init_db( coind_type ):
 				INDEX( hash )
 			)
 		''')
-		db.execute('''
+		c.execute('''
 			CREATE TABLE transaction (
 				txid VARCHAR(128) NOT NULL,
 				height BIGINT UNSIGNED NOT NULL,
@@ -527,7 +489,7 @@ def init_db( coind_type ):
 				PRIMARY KEY( height, txid )
 			)
 		''')
-		db.execute('''
+		c.execute('''
 			CREATE TABLE transaction_link (
 				vin_height BIGINT UNSIGNED,
 				vin_txid VARCHAR(128),
@@ -543,7 +505,7 @@ def init_db( coind_type ):
 				INDEX( vout_height, vout_txid, vout_idx )
 			)
 		''')
-		db.execute('''
+		c.execute('''
 			CREATE TABLE balance (
 				addresses VARCHAR(1300) CHARACTER SET ASCII NOT NULL,
 				height BIGINT UNSIGNED NOT NULL,
@@ -557,18 +519,15 @@ def init_db( coind_type ):
 				PRIMARY KEY( addresses, height, txid )
 			)
 		''')
-		db.execute('''
+		c.execute('''
 			CREATE TABLE current_balance (
 				addresses VARCHAR(1300) CHARACTER SET ASCII NOT NULL PRIMARY KEY,
 				balance BIGINT UNSIGNED NOT NULL,
 				INDEX( balance )
 			)
 		''')
-		db.close()
-		c.commit()
-		db = c.cursor()
-		db.execute( 'INSERT INTO state VALUES ( 0, NULL )' )
-		c.commit()
+		conn.commit()
+		c.execute( 'INSERT INTO state VALUES ( 0, NULL )' )
 
 	return conn
 
@@ -634,3 +593,38 @@ class handler( BaseHandler ):
 		coind_type = self.get_request_coind_type(request)
 		max_leng = self.get_request_int( request, 'max_leng', 7000 )
 		return json.dumps( run( coind_type, max_leng ) )
+
+
+def test( coind_type, max_leng ):
+	logging.getLogger().setLevel( logging.DEBUG )
+
+	try:
+		# 指定された coind のデータベースへ接続する
+		conn = CloudSQL( coind_type )
+	except MySQLdb.OperationalError:
+		# 接続に失敗した場合、データベースの作成から行う
+		conn = init_db( coind_type )
+		logging.debug( coind_type + ': DB initialized.' )
+
+	# 同時実行を防ぐため、ロックをかける
+	with conn.cursor() as c:
+		# 同時実行がない場合、もしくは指定秒数以上経過していれば UPDATE に成功する
+		c.execute( 'UPDATE state SET running_flag = 1, running_time = NOW() WHERE running_flag = 0 OR TIMESTAMPADD( SECOND, %d, running_time ) < NOW()' % LOCK_TIMEOUT )
+		conn.commit()
+		if c.rowcount != 1:
+			# ロック確保に失敗したらここで止める
+			raise Exception( 'running another!!' )
+		
+	# 開始時のポイントを覚えておく
+	with conn.cursor() as c:
+		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
+		start_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
+	
+	# ここで DB 更新作業を行う
+	if check_db_state( conn, coind_type ):
+		# 巻き戻しを行わなかった場合のみ更新に進む
+		# sync( conn, coind_type, max_leng )
+		print("check done")
+	
+	
+	return 1
