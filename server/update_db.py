@@ -482,92 +482,97 @@ def check_db_state( conn, coind_type ):
 
 # データベースの作成とテーブルの作成、初期化を行う
 def init_db( coind_type ):
-	# 一旦標準データベースに接続してデータベースの作成を行う
-	connection = CloudSQL( 'mysql' )
-	db = connection.cursor()
-	# 本来であればプレイスホルダを使用したいところだが、
-	# DB 名は文字列ではないらしい MySQL のクソ仕様のため、
-	# % で SQL 文を組み立てる。coind_type は入力チェックをパスしているため、
-	# SQL インジェクションにはならないはず。
-	db.execute( 'CREATE DATABASE %s' % coind_type )
+	with CloudSQL ( 'mysql' ) as c:
+		# 一旦標準データベースに接続してデータベースの作成を行う
+		db = c.cursor()
+		# 本来であればプレイスホルダを使用したいところだが、
+		# DB 名は文字列ではないらしい MySQL のクソ仕様のため、
+		# % で SQL 文を組み立てる。coind_type は入力チェックをパスしているため、
+		# SQL インジェクションにはならないはず。
+		db.execute( 'CREATE DATABASE %s' % coind_type )
 
 	# 作成したデータベースに接続して、テーブルを作成する
 	# MySQL のクソ仕様により、CREATE TABLE は暗黙コミットされるので
 	# トランザクションの意味はまったくないが、失敗したら手動で
 	# DB ごと消せばいいのでとりあえずこれで
-	connection = CloudSQL( coind_type )
-	db = connection.cursor()
-	db.execute('''
-		CREATE TABLE state (
-			running_flag BOOL NOT NULL,
-			running_time DATETIME
-		)
-	''')
-	db.execute('''
-		CREATE TABLE blockheader (
-			height BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-			hash VARCHAR(128) NOT NULL,
-			time DATETIME NOT NULL,
-			miners TEXT,
-			json LONGTEXT NOT NULL,
-			INDEX( hash )
-		)
-	''')
-	db.execute('''
-		CREATE TABLE transaction (
-			txid VARCHAR(128) NOT NULL,
-			height BIGINT UNSIGNED NOT NULL,
-			blockhash VARCHAR(128) NOT NULL,
-			time DATETIME NOT NULL,
-			vin_n INT NOT NULL,
-			vout_n INT NOT NULL,
-			total_output BIGINT UNSIGNED NOT NULL,
-			json LONGTEXT NOT NULL,
-			INDEX( time ),
-			INDEX( txid ),
-			PRIMARY KEY( height, txid )
-		)
-	''')
-	db.execute('''
-		CREATE TABLE transaction_link (
-			vin_height BIGINT UNSIGNED,
-			vin_txid VARCHAR(128),
-			vin_idx INT,
-			vout_height BIGINT UNSIGNED NOT NULL,
-			vout_txid VARCHAR(128) NOT NULL,
-			vout_idx INT NOT NULL,
-			addresses VARCHAR(1300) CHARACTER SET ASCII,
-			value BIGINT UNSIGNED NOT NULL,
-			INDEX( addresses, vin_txid ),
-			INDEX( vin_height, vin_txid, vin_idx, vout_txid, vout_idx ),
-			INDEX( vin_height, vin_txid, vin_idx ),
-			INDEX( vout_height, vout_txid, vout_idx )
-		)
-	''')
-	db.execute('''
-		CREATE TABLE balance (
-			addresses VARCHAR(1300) CHARACTER SET ASCII NOT NULL,
-			height BIGINT UNSIGNED NOT NULL,
-			txid VARCHAR(128) NOT NULL,
-			serial BIGINT UNSIGNED NOT NULL,
-			time DATETIME NOT NULL,
-			balance BIGINT UNSIGNED NOT NULL,
-			gain BIGINT NOT NULL,
-			INDEX( height, txid ),
-			INDEX( addresses, serial ),
-			PRIMARY KEY( addresses, height, txid )
-		)
-	''')
-	db.execute('''
-		CREATE TABLE current_balance (
-			addresses VARCHAR(1300) CHARACTER SET ASCII NOT NULL PRIMARY KEY,
-			balance BIGINT UNSIGNED NOT NULL,
-			INDEX( balance )
-		)
-	''')
-	db.execute( 'INSERT INTO state VALUES ( 0, NULL )' )
+	conn = CloudSQL( coind_type )
+	with conn as c:
+		db = c.cursor()
+		db.execute('''
+			CREATE TABLE state (
+				running_flag BOOL NOT NULL,
+				running_time DATETIME
+			)
+		''')
+		db.execute('''
+			CREATE TABLE blockheader (
+				height BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+				hash VARCHAR(128) NOT NULL,
+				time DATETIME NOT NULL,
+				miners TEXT,
+				json LONGTEXT NOT NULL,
+				INDEX( hash )
+			)
+		''')
+		db.execute('''
+			CREATE TABLE transaction (
+				txid VARCHAR(128) NOT NULL,
+				height BIGINT UNSIGNED NOT NULL,
+				blockhash VARCHAR(128) NOT NULL,
+				time DATETIME NOT NULL,
+				vin_n INT NOT NULL,
+				vout_n INT NOT NULL,
+				total_output BIGINT UNSIGNED NOT NULL,
+				json LONGTEXT NOT NULL,
+				INDEX( time ),
+				INDEX( txid ),
+				PRIMARY KEY( height, txid )
+			)
+		''')
+		db.execute('''
+			CREATE TABLE transaction_link (
+				vin_height BIGINT UNSIGNED,
+				vin_txid VARCHAR(128),
+				vin_idx INT,
+				vout_height BIGINT UNSIGNED NOT NULL,
+				vout_txid VARCHAR(128) NOT NULL,
+				vout_idx INT NOT NULL,
+				addresses VARCHAR(1300) CHARACTER SET ASCII,
+				value BIGINT UNSIGNED NOT NULL,
+				INDEX( addresses, vin_txid ),
+				INDEX( vin_height, vin_txid, vin_idx, vout_txid, vout_idx ),
+				INDEX( vin_height, vin_txid, vin_idx ),
+				INDEX( vout_height, vout_txid, vout_idx )
+			)
+		''')
+		db.execute('''
+			CREATE TABLE balance (
+				addresses VARCHAR(1300) CHARACTER SET ASCII NOT NULL,
+				height BIGINT UNSIGNED NOT NULL,
+				txid VARCHAR(128) NOT NULL,
+				serial BIGINT UNSIGNED NOT NULL,
+				time DATETIME NOT NULL,
+				balance BIGINT UNSIGNED NOT NULL,
+				gain BIGINT NOT NULL,
+				INDEX( height, txid ),
+				INDEX( addresses, serial ),
+				PRIMARY KEY( addresses, height, txid )
+			)
+		''')
+		db.execute('''
+			CREATE TABLE current_balance (
+				addresses VARCHAR(1300) CHARACTER SET ASCII NOT NULL PRIMARY KEY,
+				balance BIGINT UNSIGNED NOT NULL,
+				INDEX( balance )
+			)
+		''')
+		db.close()
+		c.commit()
+		db = c.cursor()
+		db.execute( 'INSERT INTO state VALUES ( 0, NULL )' )
+		c.commit()
 
-	return db
+	return conn
 
 def run( coind_type, max_leng ):
 	logging.getLogger().setLevel( logging.DEBUG )
@@ -578,7 +583,8 @@ def run( coind_type, max_leng ):
 		db = conn.cursor()
 	except MySQLdb.OperationalError:
 		# 接続に失敗した場合、データベースの作成から行う
-		db = init_db( coind_type )
+		conn = init_db( coind_type )
+		db = conn.cursor()
 		logging.debug( coind_type + ': DB initialized.' )
 
 	# 同時実行を防ぐため、ロックをかける
