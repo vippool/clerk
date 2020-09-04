@@ -456,11 +456,9 @@ def revert( conn, coind_type, height ):
 # - 問題なければ True, 巻き戻しを行った場合 False を返す
 def check_db_state( conn, coind_type ):
 	# 最新のブロック情報を取得する
-	db = conn.cursor()
-	db.execute( 'SELECT * FROM blockheader ORDER BY height DESC LIMIT 1' )
-	block = db.fetchone()
-	db.close()
-	conn.commit()
+	with conn.cursor() as c:
+		c.execute( 'SELECT * FROM blockheader ORDER BY height DESC LIMIT 1' )
+		block = c.fetchone()
 
 	# DB が空っぽなら何もしないでいい
 	if block is None:
@@ -580,26 +578,24 @@ def run( coind_type, max_leng ):
 	try:
 		# 指定された coind のデータベースへ接続する
 		conn = CloudSQL( coind_type )
-		db = conn.cursor()
 	except MySQLdb.OperationalError:
 		# 接続に失敗した場合、データベースの作成から行う
 		conn = init_db( coind_type )
-		db = conn.cursor()
 		logging.debug( coind_type + ': DB initialized.' )
 
 	# 同時実行を防ぐため、ロックをかける
-	# 同時実行がない場合、もしくは指定秒数以上経過していれば UPDATE に成功する
-	db.execute( 'UPDATE state SET running_flag = 1, running_time = NOW() WHERE running_flag = 0 OR TIMESTAMPADD( SECOND, %d, running_time ) < NOW()' % LOCK_TIMEOUT )
-	db.close()
-	conn.commit()
-	if db.rowcount != 1:
-		# ロック確保に失敗したらここで止める
-		raise Exception( 'running another!!' )
-
+	with conn.cursor() as c:
+		# 同時実行がない場合、もしくは指定秒数以上経過していれば UPDATE に成功する
+		c.execute( 'UPDATE state SET running_flag = 1, running_time = NOW() WHERE running_flag = 0 OR TIMESTAMPADD( SECOND, %d, running_time ) < NOW()' % LOCK_TIMEOUT )
+		conn.commit()
+		if c.rowcount != 1:
+			# ロック確保に失敗したらここで止める
+			raise Exception( 'running another!!' )
+		
 	# 開始時のポイントを覚えておく
-	db = conn.cursor()
-	db.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
-	start_block_height = db.fetchone()['IFNULL(MAX(height)+1,0)']
+	with conn.cursor() as c:
+		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
+		start_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
 
 	# ここで DB 更新作業を行う
 	if check_db_state( conn, coind_type ):
