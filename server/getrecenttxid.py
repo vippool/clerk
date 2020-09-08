@@ -17,9 +17,7 @@ class handler( BaseHandler ):
 		n = self.get_request_int( request, 'n', 10 )
 
 		db = CloudSQL( coind_type )
-		db.begin()
-		c = db.cursor()
-		try:
+		with db.cursor() as c:
 			c.execute( 'SELECT txid, time, height, total_output FROM transaction ORDER BY time DESC LIMIT %s', (n,) )
 
 			r = []
@@ -31,12 +29,6 @@ class handler( BaseHandler ):
 					'time': int( time.mktime( e['time'].timetuple() ) ),
 					'value': e['total_output'] / SATOSHI_COIN
 				})
-			db.commit()
-		except Exception as e:
-			db.rollback()
-			raise e
-		finally:
-			c.close()
 
 		# JSON にシリアライズして返却
 		return self.write_json( r )

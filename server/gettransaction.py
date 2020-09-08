@@ -21,8 +21,7 @@ class handler( BaseHandler ):
 		height = request.args.get('height', None)
 
 		db = CloudSQL( coind_type )
-		c = db.cursor()
-		try:
+		with db.cursor() as c:
 			# 現在のブロック高を取得する
 			c.execute( 'SELECT MAX(height) FROM blockheader' )
 			chain_height = c.fetchone()['MAX(height)']
@@ -74,12 +73,6 @@ class handler( BaseHandler ):
 				json_txdata['height'] = e['height']
 
 				r.append( json_txdata )
-			db.commit()
-		except Exception as e:
-			db.rollback()
-			raise e
-		finally:
-			c.close()
 
 		if len( r ) == 0:
 			# 存在しない場合
