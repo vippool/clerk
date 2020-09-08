@@ -20,13 +20,13 @@ ADDRESS_LENGTH = 34
 # アドレスのプレフィックスを返す
 def address_prefix( coind_type ):
 	if coind_type == 'bitcoind':
-		return '\x00'
+		return b'\x00'
 	if coind_type == 'bitcoind_test':
-		return '\x6f'
+		return b'\x6f'
 	if coind_type == 'monacoind':
-		return '\x32'
+		return b'\x32'
 	if coind_type == 'monacoind_test':
-		return '\x6f'
+		return b'\x6f'
 	raise Exception( 'unknown coind_type: %s' % coind_type )
 
 # BASE58 エンコード
@@ -82,7 +82,7 @@ def encode_coin_address( pub_key, coind_type ):
 	# ハッシュ値を計算する
 	ripemd160 = RIPEMD.new()
 	ripemd160.update( sha256( pub_key ).digest() )
-	binary = address_prefix( coind_type ).encode() + ripemd160.digest()
+	binary = address_prefix( coind_type ) + ripemd160.digest()
 
 	# チェックサムを計算する
 	cksum = sha256( sha256( binary ).digest() ).digest()
@@ -100,7 +100,7 @@ def decode_coin_address( addr, coind_type, elem ):
 		raise ValidationError( elem, 'len' )
 
 	# アドレスのプレフィックスを確認
-	if binary[0:1].decode() != address_prefix( coind_type ):
+	if binary[0:1] != address_prefix( coind_type ):
 		raise ValidationError( elem, 'address_prefix' )
 
 	# チェックサムを確認する
