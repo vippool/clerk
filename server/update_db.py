@@ -559,6 +559,7 @@ def run( coind_type, max_leng ):
 
 	try:
 		# 指定された coind のデータベースへ接続する
+		db.begin()
 		db = CloudSQL( coind_type )
 	except MySQLdb.OperationalError:
 		# 接続に失敗した場合、データベースの作成から行う
@@ -645,4 +646,3 @@ class handler( BaseHandler ):
 		coind_type = self.get_request_coind_type(request)
 		max_leng = self.get_request_int( request, 'max_leng', 7000 )
 		return json.dumps( run( coind_type, max_leng ) )
-		
