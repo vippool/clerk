@@ -557,9 +557,7 @@ def run( coind_type, max_leng ):
 		logging.debug( coind_type + ': DB initialized.' )
 
 	# 同時実行を防ぐため、ロックをかける
-	db.begin()
-	c = db.cursor()
-	try:
+	with db.cursor() as c:
 		# 同時実行がない場合、もしくは指定秒数以上経過していれば UPDATE に成功する
 		c.execute( 'UPDATE state SET running_flag = 1, running_time = NOW() WHERE running_flag = 0 OR TIMESTAMPADD( SECOND, %d, running_time ) < NOW()' % LOCK_TIMEOUT )
 		if c.rowcount != 1:
@@ -567,11 +565,6 @@ def run( coind_type, max_leng ):
 			raise Exception( 'running another!!' )
 
 		db.commit()
-	except Exception as e:
-		db.rollback()
-		raise e
-	finally:
-		c.close()
 		
 	# 開始時のポイントを覚えておく
 	with db.cursor() as c:
@@ -589,15 +582,9 @@ def run( coind_type, max_leng ):
 		end_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
 
 	# ロック解除
-	c = db.cursor()
-	try:
+	with db.cursor() as c:
 		c.execute( 'UPDATE state SET running_flag = 0, running_time = NULL' )
 		db.commit()
-	except Exception as e:
-		db.rollback()
-		raise e
-	finally:
-		c.close()
 
 	# 実行結果をログと戻り値の双方に記述する
 	result = 'update_db: %d => %d' % ( start_block_height, end_block_height )

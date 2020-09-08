@@ -12,20 +12,16 @@ import json
 import config
 
 class coind_base:
-	def decimal_default_proc(self, obj):
-		if isinstance(obj, int):
-			return float(obj)
-		raise TypeError
 	def run( self, method, params ):
 		header = {
-			'Authorization': b'Basic %b' % base64.standard_b64encode( b'%b:%b' % ( self.rpc_user.encode(), self.rpc_pass.encode() ) )
+			'Authorization': b'Basic %b' % base64.standard_b64encode( b'%b:%b' % ( self.rpc_user.encode('utf-8'), self.rpc_pass.encode('utf-8') ) )
 		}
 		body = {
 			'method': method,
 			'params': params
 		}
 		conn = http.client.HTTPConnection( self.rpc_addr, self.rpc_port )
-		conn.request( 'POST', '/', json.dumps(body, default=self.decimal_default_proc), header )
+		conn.request( 'POST', '/', json.dumps(body), header )
 		res = conn.getresponse()
 		if res.status == 200:
 			js = json.loads( res.read() )
