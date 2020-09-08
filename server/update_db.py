@@ -45,17 +45,9 @@ def sync( db, coind_type, max_leng ):
 	cd_height = cd.run( 'getblockcount', [] )
 
 	# 開始時の DB 内ブロック高
-	db.begin()
-	c = db.cursor()
-	try:
+	with db.cursor() as c:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
 		start_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
-		db.commit()
-	except Exception as e:
-		db.rollback()
-		raise e
-	finally:
-		c.close()
 
 	# 開始時刻を記録
 	start_time = time.time()
@@ -423,17 +415,9 @@ def revert( db, coind_type, height ):
 # - 問題なければ True, 巻き戻しを行った場合 False を返す
 def check_db_state( db, coind_type ):
 	# 最新のブロック情報を取得する
-	db.begin()
-	c = db.cursor()
-	try:
+	with db.cursor() as c:
 		c.execute( 'SELECT * FROM blockheader ORDER BY height DESC LIMIT 1' )
 		block = c.fetchone()
-		db.commit()
-	except Exception as e:
-		db.rollback()
-		raise e
-	finally:
-		c.close()
 
 	# DB が空っぽなら何もしないでいい
 	if block is None:
@@ -590,17 +574,9 @@ def run( coind_type, max_leng ):
 		c.close()
 		
 	# 開始時のポイントを覚えておく
-	db.begin()
-	c = db.cursor()
-	try:
+	with db.cursor() as c:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
 		start_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
-		db.commit()
-	except Exception as e:
-		db.rollback()
-		raise e
-	finally:
-		c.close()
 
 	# ここで DB 更新作業を行う
 	if check_db_state( db, coind_type ):
@@ -608,17 +584,9 @@ def run( coind_type, max_leng ):
 		sync( db, coind_type, max_leng )
 
 	# 終了時のポイントを取得する
-	db.begin()
-	c = db.cursor()
-	try:
+	with db.cursor() as c:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
 		end_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
-		db.commit()
-	except Exception as e:
-		db.rollback()
-		raise e
-	finally:
-		c.close()
 
 	# ロック解除
 	c = db.cursor()
