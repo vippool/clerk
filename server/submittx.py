@@ -6,7 +6,6 @@
 #                                                        #
 #========================================================#
 
-# from google.appengine.api import taskqueue
 from base_handler import BaseHandler
 from base_handler import ValidationError
 from util import parse_pub_key

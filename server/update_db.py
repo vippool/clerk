@@ -6,7 +6,6 @@
 #                                                        #
 #========================================================#
 
-# from google.appengine.api import taskqueue
 from coind import coind_factory
 from cloudsql import CloudSQL
 from base_handler import BaseHandler
@@ -22,7 +21,7 @@ import time
 import MySQLdb
 
 TIMEOUT = 480.0               # sync のタイムアウト時間 (秒)
-LOCK_TIMEOUT = 5            # ロックのタイムアウト時間 (秒)
+LOCK_TIMEOUT = 900            # ロックのタイムアウト時間 (秒)
 
 def ignore_txid( coind_type, txid ):
 	# 第 0 ブロックのトランザクションは取得できない
@@ -76,16 +75,20 @@ def sync( db, coind_type, max_leng ):
 		c = db.cursor()
 		try:
 			# 新規追加するブロックのデータを取得
+
 			# ブロックハッシュを取得
 			blockhash = cd.run( 'getblockhash', [ int(block_height) ] )
+
 			# ブロックデータを取得
 			cd_block = cd.run( 'getblock', [ blockhash ] )
+
 			# 縮小版の json データ作成
 			# - 信用できないデータは出力時に補完する
 			block_json_reduce = copy.deepcopy( cd_block )
 			block_json_reduce.pop( 'nextblockhash', None )
 			block_json_reduce.pop( 'previousblockhash', None )
 			block_json_reduce.pop( 'confirmations' )
+
 			# マイナーは一旦空にしておく
 			miners = None
 
@@ -151,6 +154,7 @@ def sync( db, coind_type, max_leng ):
 				total_output = 0
 				for vout in cd_transaction['vout']:
 					total_output += vout['value'] * SATOSHI_COIN
+
 				# トランザクションデータの作成
 				c.execute(
 					'INSERT INTO transaction VALUES ( %s, %s, %s, %s, %s, %s, %s, %s )',
@@ -212,7 +216,6 @@ def sync( db, coind_type, max_leng ):
 								vin['vout']
 							)
 						)
-
 						if c.rowcount != 1:
 							if c.rowcount == 0:
 								# CVE-2018-17144 の攻撃対象となったトランザクションの場合は重複利用を無視する
@@ -226,6 +229,7 @@ def sync( db, coind_type, max_leng ):
 				c.execute( 'SELECT * FROM transaction_link WHERE (vin_height = %s AND vin_txid = %s) OR (vout_height = %s AND vout_txid = %s)', (block_height, txid, block_height, txid) )
 				for e in c.fetchall():
 					addr = e['addresses']
+
 					# アドレスがない場合は無視
 					if addr is None:
 						continue
@@ -312,9 +316,9 @@ def sync( db, coind_type, max_leng ):
 def revert( db, coind_type, height ):
 
 	# トランザクション内で実行する
-	# ブロックヘッダの確認
 	c = db.cursor()
 	try:
+		# ブロックヘッダの確認
 		c.execute( 'SELECT * FROM blockheader WHERE height = %s', (height,) )
 		block = c.fetchone()
 
@@ -426,15 +430,17 @@ def check_db_state( db, coind_type ):
 	finally:
 		c.close()
 
-	# c が空っぽなら何もしないでいい
+	# DB が空っぽなら何もしないでいい
 	if block is None:
 		return True
 
 	# コインノードクライアントの初期化
 	cd = coind_factory( coind_type )
+
 	# ブロックハッシュを確認
 	db_blockhash = block['hash']
 	cd_blockhash = cd.run( 'getblockhash', [ block['height'] ] )
+
 	# 一致していたら問題なく次へ進んでいい
 	if db_blockhash == cd_blockhash:
 		return True
@@ -446,12 +452,12 @@ def check_db_state( db, coind_type ):
 
 # データベースの作成とテーブルの作成、初期化を行う
 def init_db( coind_type ):
+	# 一旦標準データベースに接続してデータベースの作成を行う
 	db = CloudSQL ( 'mysql' )
 	c = db.cursor()
 	try:
-		# 一旦標準データベースに接続してデータベースの作成を行う
 		# 本来であればプレイスホルダを使用したいところだが、
-		# c 名は文字列ではないらしい MySQL のクソ仕様のため、
+		# DB 名は文字列ではないらしい MySQL のクソ仕様のため、
 		# % で SQL 文を組み立てる。coind_type は入力チェックをパスしているため、
 		# SQL インジェクションにはならないはず。
 		c.execute( 'CREATE DATABASE %s' % coind_type )
@@ -466,7 +472,7 @@ def init_db( coind_type ):
 	# 作成したデータベースに接続して、テーブルを作成する
 	# MySQL のクソ仕様により、CREATE TABLE は暗黙コミットされるので
 	# トランザクションの意味はまったくないが、失敗したら手動で
-	# c ごと消せばいいのでとりあえずこれで
+	# DB ごと消せばいいのでとりあえずこれで
 	db = CloudSQL( coind_type )
 	c = db.cursor()
 	try:
@@ -557,7 +563,7 @@ def run( coind_type, max_leng ):
 	except MySQLdb.OperationalError:
 		# 接続に失敗した場合、データベースの作成から行う
 		db = init_db( coind_type )
-		logging.debug( coind_type + ': c initialized.' )
+		logging.debug( coind_type + ': DB initialized.' )
 
 	# 同時実行を防ぐため、ロックをかける
 	c = db.cursor()
@@ -567,6 +573,7 @@ def run( coind_type, max_leng ):
 		if c.rowcount != 1:
 			# ロック確保に失敗したらここで止める
 			raise Exception( 'running another!!' )
+
 		db.commit()
 	except Exception as e:
 		db.rollback()
@@ -586,7 +593,7 @@ def run( coind_type, max_leng ):
 	finally:
 		c.close()
 
-	# ここで c 更新作業を行う
+	# ここで DB 更新作業を行う
 	if check_db_state( db, coind_type ):
 		# 巻き戻しを行わなかった場合のみ更新に進む
 		sync( db, coind_type, max_leng )
@@ -630,12 +637,12 @@ class handler( BaseHandler ):
 		)
 
 	def get( self ):
-		self.add_taskqueue( 'update-main-c-monacoind', 'monacoind', 7000 )
-		self.add_taskqueue( 'update-main-c-monacoind-test', 'monacoind_test', 7000 )
+		self.add_taskqueue( 'update-main-db-monacoind', 'monacoind', 7000 )
+		self.add_taskqueue( 'update-main-db-monacoind-test', 'monacoind_test', 7000 )
 		return "OK"
 
 	def post( self, request ):
 		coind_type = self.get_request_coind_type(request)
 		max_leng = self.get_request_int( request, 'max_leng', 7000 )
 		return json.dumps( run( coind_type, max_leng ) )
-	
+		
