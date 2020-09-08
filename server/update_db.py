@@ -45,6 +45,7 @@ def sync( db, coind_type, max_leng ):
 	cd_height = cd.run( 'getblockcount', [] )
 
 	# 開始時の c 内ブロック高
+	db.begin()
 	c = db.cursor()
 	try:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
@@ -72,6 +73,7 @@ def sync( db, coind_type, max_leng ):
 			return
 
 		# 以降の同期作業はトランザクション内で行う
+		db.begin()
 		c = db.cursor()
 		try:
 			# 新規追加するブロックのデータを取得
@@ -316,6 +318,7 @@ def sync( db, coind_type, max_leng ):
 def revert( db, coind_type, height ):
 
 	# トランザクション内で実行する
+	db.begin()
 	c = db.cursor()
 	try:
 		# ブロックヘッダの確認
@@ -419,6 +422,7 @@ def revert( db, coind_type, height ):
 # - 問題なければ True, 巻き戻しを行った場合 False を返す
 def check_db_state( db, coind_type ):
 	# 最新のブロック情報を取得する
+	db.begin()
 	c = db.cursor()
 	try:
 		c.execute( 'SELECT * FROM blockheader ORDER BY height DESC LIMIT 1' )
@@ -454,6 +458,7 @@ def check_db_state( db, coind_type ):
 def init_db( coind_type ):
 	# 一旦標準データベースに接続してデータベースの作成を行う
 	db = CloudSQL ( 'mysql' )
+	db.begin()
 	c = db.cursor()
 	try:
 		# 本来であればプレイスホルダを使用したいところだが、
@@ -474,6 +479,7 @@ def init_db( coind_type ):
 	# トランザクションの意味はまったくないが、失敗したら手動で
 	# DB ごと消せばいいのでとりあえずこれで
 	db = CloudSQL( coind_type )
+	db.begin()
 	c = db.cursor()
 	try:
 		c.execute('''
@@ -559,7 +565,6 @@ def run( coind_type, max_leng ):
 
 	try:
 		# 指定された coind のデータベースへ接続する
-		db.begin()
 		db = CloudSQL( coind_type )
 	except MySQLdb.OperationalError:
 		# 接続に失敗した場合、データベースの作成から行う
@@ -567,6 +572,7 @@ def run( coind_type, max_leng ):
 		logging.debug( coind_type + ': DB initialized.' )
 
 	# 同時実行を防ぐため、ロックをかける
+	db.begin()
 	c = db.cursor()
 	try:
 		# 同時実行がない場合、もしくは指定秒数以上経過していれば UPDATE に成功する
@@ -583,6 +589,7 @@ def run( coind_type, max_leng ):
 		c.close()
 		
 	# 開始時のポイントを覚えておく
+	db.begin()
 	c = db.cursor()
 	try:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
@@ -600,6 +607,7 @@ def run( coind_type, max_leng ):
 		sync( db, coind_type, max_leng )
 
 	# 終了時のポイントを取得する
+	db.begin()
 	c = db.cursor()
 	try:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
