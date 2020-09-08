@@ -81,7 +81,6 @@ class handler( BaseHandler ):
 		fee = params['fee']
 		data = params.get( 'data', None )
 
-
 		# from を検査してからハッシュ値に変換する
 		from_hash = []
 		from_addr = []
@@ -168,7 +167,9 @@ class handler( BaseHandler ):
 		vin_type = ''
 		vin_reqSigs = []
 		db = CloudSQL( coind_type )
-		with db as c:
+		db.begin()
+		c = db.cursor()
+		try:
 			c.execute( 'SELECT * FROM transaction_link WHERE addresses = %s AND ISNULL(vin_txid)', (' '.join( from_addr ),) )
 			for e in c.fetchall():
 				# トランザクションの生データ取得
@@ -183,7 +184,7 @@ class handler( BaseHandler ):
 				else:
 					if type != 'multisig':
 						continue
-
+					
 				input_value += e['value']
 				vin_txid.append( e['vout_txid'] )
 				vin_idx.append( e['vout_idx'] )
@@ -192,6 +193,12 @@ class handler( BaseHandler ):
 
 				if input_value >= (value + fee) * SATOSHI_COIN:
 					break
+			db.commit()
+		except Exception as e:
+			db.rollback()
+			raise e
+		finally:
+			c.close()
 
 		# 残高が足りるか確認
 		if input_value < (value + fee) * SATOSHI_COIN:

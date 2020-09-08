@@ -32,12 +32,12 @@ def address_prefix( coind_type ):
 # BASE58 エンコード
 def b58encode( src ):
 	mapping = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-
+	
 	r = ''
 	n = int( hexlify( src ), 16 )
 	for i in range( 0, ADDRESS_LENGTH ):
 		r = mapping[n % 58] + r
-		n = n / 58
+		n = int(n / 58)
 
 	return r
 
@@ -82,7 +82,7 @@ def encode_coin_address( pub_key, coind_type ):
 	# ハッシュ値を計算する
 	ripemd160 = RIPEMD.new()
 	ripemd160.update( sha256( pub_key ).digest() )
-	binary = address_prefix( coind_type ) + ripemd160.digest()
+	binary = address_prefix( coind_type ).encode() + ripemd160.digest()
 
 	# チェックサムを計算する
 	cksum = sha256( sha256( binary ).digest() ).digest()
@@ -98,9 +98,9 @@ def decode_coin_address( addr, coind_type, elem ):
 	# 正しければ 25 Byte になるはず
 	if len( binary ) != 25:
 		raise ValidationError( elem, 'len' )
-
+	
 	# アドレスのプレフィックスを確認
-	if binary[0] != address_prefix( coind_type ):
+	if binary[0:1].decode() != address_prefix( coind_type ):
 		raise ValidationError( elem, 'address_prefix' )
 
 	# チェックサムを確認する

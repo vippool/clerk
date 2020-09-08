@@ -20,9 +20,10 @@ class handler( BaseHandler ):
 		height = self.get_request_int(request, 'height', None)
 		hash = request.args.get('hash', None)
 
-		connection = CloudSQL( coind_type )
-		db = connection.cursor()
-		with db as c:
+		db = CloudSQL( coind_type )
+		db.begin()
+		c = db.cursor()
+		try:
 			# ブロックの取得
 			if height is not None:
 				c.execute( 'SELECT * FROM blockheader WHERE height = %s', (height,) )
@@ -52,6 +53,12 @@ class handler( BaseHandler ):
 			previousblockhash = c.fetchone()
 			if previousblockhash is not None:
 				previousblockhash = previousblockhash['hash']
+			db.commit()
+		except Exception as e:
+			db.rollback()
+			raise e
+		finally:
+			c.close()
 
 		# コインノードからの生データをパース
 		json_data = json.loads( bz2.decompress( base64.b64decode( blockheader['json'] ) ) )

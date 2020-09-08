@@ -16,13 +16,13 @@ import bz2
 
 class handler( BaseHandler ):
 	def get( self, request ):
-		coind_type = self.get_request_coind_type(repr)
+		coind_type = self.get_request_coind_type(request)
 		txid = request.args.get('txid')
 		height = request.args.get('height', None)
 
-		connection = CloudSQL( coind_type )
-		db = connection.cursor()
-		with db as c:
+		db = CloudSQL( coind_type )
+		c = db.cursor()
+		try:
 			# 現在のブロック高を取得する
 			c.execute( 'SELECT MAX(height) FROM blockheader' )
 			chain_height = c.fetchone()['MAX(height)']
@@ -37,11 +37,11 @@ class handler( BaseHandler ):
 			for e in c.fetchall():
 				# コインノードからの生データをパース
 				json_txdata = json.loads( bz2.decompress( base64.b64decode( e['json'] ) ) )
-
+				
 				# vin_n の想定数を数える
 				vin_n = 0
 				for ee in json_txdata['vin']:
-					if ee.has_key('txid'):
+					if 'txid' in ee:
 						vin_n += 1
 
 				# vin の情報を追加する
@@ -54,7 +54,7 @@ class handler( BaseHandler ):
 					json_txdata['vin'][i]['value'] = vin_link[i]['value'] / SATOSHI_COIN
 					json_txdata['vin'][i]['height'] = vin_link[i]['vout_height']
 					json_txdata['vin'][i]['txid'] = vin_link[i]['vout_txid']
-					if json_txdata['vin'][i].has_key( 'scriptSig' ):
+					if 'scriptSig' in json_txdata['vin'][i]:
 						json_txdata['vin'][i]['scriptSig']['addresses'] = vin_link[i]['addresses'].split(' ')
 
 				# vout 方向のリンクを追加する
@@ -74,6 +74,12 @@ class handler( BaseHandler ):
 				json_txdata['height'] = e['height']
 
 				r.append( json_txdata )
+			db.commit()
+		except Exception as e:
+			db.rollback()
+			raise e
+		finally:
+			c.close()
 
 		if len( r ) == 0:
 			# 存在しない場合

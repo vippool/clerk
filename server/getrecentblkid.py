@@ -14,9 +14,10 @@ class handler( BaseHandler ):
 		coind_type = self.get_request_coind_type(request)
 		n = self.get_request_int(request, 'n', 10)
 
-		connection = CloudSQL( coind_type )
-		db = connection.cursor()
-		with db as c:
+		db = CloudSQL( coind_type )
+		db.begin()
+		c = db.cursor()
+		try:
 			# 最新のものから順に取り出して応答を作成
 			r = []
 			c.execute( 'SELECT height, hash, miners FROM blockheader ORDER BY height DESC LIMIT %s', {n,} )
@@ -26,5 +27,11 @@ class handler( BaseHandler ):
 					'hash': e['hash'],
 					'miners': e['miners'].split(' '),
 				})
+			db.commit()
+		except Exception as e:
+			db.rollback()
+			raise e
+		finally:
+			c.close()
 		# JSON にシリアライズして返却
 		return self.write_json( r )
