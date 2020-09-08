@@ -161,7 +161,7 @@ def sync( db, coind_type, max_leng ):
 						len( cd_transaction['vin'] ),
 						len( cd_transaction['vout'] ),
 						total_output,
-						base64.b64encode( bz2.compress( json.dumps( tx_json_reduce ).encode() ) ).decode()
+						base64.b64encode( bz2.compress( json.dumps( tx_json_reduce ).encode('utf-8') ) ).decode('ascii')
 					)
 				)
 
@@ -294,7 +294,7 @@ def sync( db, coind_type, max_leng ):
 					cd_block['hash'],
 					datetime.fromtimestamp( cd_block['time'] ),
 					miners,
-					base64.b64encode( bz2.compress( json.dumps( block_json_reduce ).encode() ) )
+					base64.b64encode( bz2.compress( json.dumps( block_json_reduce ).encode('utf-8') ) )
 				)
 			)
 			db.commit()
