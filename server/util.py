@@ -20,13 +20,13 @@ ADDRESS_LENGTH = 34
 # アドレスのプレフィックスを返す
 def address_prefix( coind_type ):
 	if coind_type == 'bitcoind':
-		return '\x00'
+		return b'\x00'
 	if coind_type == 'bitcoind_test':
-		return '\x6f'
+		return b'\x6f'
 	if coind_type == 'monacoind':
-		return '\x32'
+		return b'\x32'
 	if coind_type == 'monacoind_test':
-		return '\x6f'
+		return b'\x6f'
 	raise Exception( 'unknown coind_type: %s' % coind_type )
 
 # BASE58 エンコード
@@ -37,7 +37,7 @@ def b58encode( src ):
 	n = int( hexlify( src ), 16 )
 	for i in range( 0, ADDRESS_LENGTH ):
 		r = mapping[n % 58] + r
-		n = n / 58
+		n = int(n / 58)
 
 	return r
 
@@ -100,7 +100,7 @@ def decode_coin_address( addr, coind_type, elem ):
 		raise ValidationError( elem, 'len' )
 
 	# アドレスのプレフィックスを確認
-	if binary[0] != address_prefix( coind_type ):
+	if binary[0:1] != address_prefix( coind_type ):
 		raise ValidationError( elem, 'address_prefix' )
 
 	# チェックサムを確認する

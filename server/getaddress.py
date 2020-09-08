@@ -22,4 +22,4 @@ class handler( BaseHandler ):
 		# アドレスに変換する
 		address = encode_coin_address( d1, coind_type )
 
-		self.write_json( { 'address': address } )
+		return self.write_json( { 'address': address } )

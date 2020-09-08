@@ -21,7 +21,7 @@ class handler( BaseHandler ):
 		hash = request.args.get('hash', None)
 
 		db = CloudSQL( coind_type )
-		with db as c:
+		with db.cursor() as c:
 			# ブロックの取得
 			if height is not None:
 				c.execute( 'SELECT * FROM blockheader WHERE height = %s', (height,) )
@@ -63,4 +63,4 @@ class handler( BaseHandler ):
 		json_data['previousblockhash'] = previousblockhash
 
 		# JSON 形式でシリアライズして返す
-		self.write_json( json_data )
+		return self.write_json( json_data )

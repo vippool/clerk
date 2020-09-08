@@ -6,7 +6,6 @@
 #                                                        #
 #========================================================#
 
-from google.appengine.api import taskqueue
 from coind import coind_factory
 from cloudsql import CloudSQL
 from base_handler import BaseHandler
@@ -46,7 +45,7 @@ def sync( db, coind_type, max_leng ):
 	cd_height = cd.run( 'getblockcount', [] )
 
 	# 開始時の DB 内ブロック高
-	with db as c:
+	with db.cursor() as c:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
 		start_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
 
@@ -67,11 +66,13 @@ def sync( db, coind_type, max_leng ):
 			return
 
 		# 以降の同期作業はトランザクション内で行う
-		with db as c:
+		db.begin()
+		c = db.cursor()
+		try:
 			# 新規追加するブロックのデータを取得
 
 			# ブロックハッシュを取得
-			blockhash = cd.run( 'getblockhash', [ block_height ] )
+			blockhash = cd.run( 'getblockhash', [ int(block_height) ] )
 
 			# ブロックデータを取得
 			cd_block = cd.run( 'getblock', [ blockhash ] )
@@ -105,7 +106,7 @@ def sync( db, coind_type, max_leng ):
 				tx_json_reduce.pop( 'hex' )
 				tx_json_reduce.pop( 'confirmations' )
 				for e in tx_json_reduce['vin']:
-					if e.has_key('scriptSig'):
+					if 'scriptSig' in e:
 						e['scriptSig'].pop( 'hex' )
 				for e in tx_json_reduce['vout']:
 					e['scriptPubKey'].pop( 'hex' )
@@ -160,7 +161,7 @@ def sync( db, coind_type, max_leng ):
 						len( cd_transaction['vin'] ),
 						len( cd_transaction['vout'] ),
 						total_output,
-						base64.b64encode( bz2.compress( json.dumps( tx_json_reduce ) ) )
+						base64.b64encode( bz2.compress( json.dumps( tx_json_reduce ).encode('utf-8') ) ).decode('ascii')
 					)
 				)
 
@@ -169,7 +170,7 @@ def sync( db, coind_type, max_leng ):
 				for vout in cd_transaction['vout']:
 					# 宛先アドレスの組み立て
 					scriptPubKey = vout['scriptPubKey']
-					if scriptPubKey.has_key('addresses'):
+					if 'addresses' in scriptPubKey:
 						vout_addr = ' '.join( scriptPubKey['addresses'] )
 
 						# 宛先全部のリストを構成
@@ -193,13 +194,13 @@ def sync( db, coind_type, max_leng ):
 					)
 
 				# コインベーストランザクションの場合はマイナーとして宛先を設定
-				if cd_transaction['vin'][0].has_key( 'coinbase' ):
+				if 'coinbase' in cd_transaction['vin'][0]:
 					miners = ' '.join( destinations )
 
 				# トランザクションリンクの対向側を設定
 				for idx in range( len( cd_transaction['vin'] ) ):
 					vin = cd_transaction['vin'][idx]
-					if vin.has_key( 'txid' ):
+					if 'txid' in vin:
 						c.execute(
 							'UPDATE transaction_link SET vin_height = %s, vin_txid = %s, vin_idx = %s WHERE ISNULL(vin_height) AND ISNULL(vin_txid) AND ISNULL(vin_idx) AND vout_txid = %s AND vout_idx = %s',
 							(
@@ -220,7 +221,7 @@ def sync( db, coind_type, max_leng ):
 
 				# トランザクションでの残高増減表を作成
 				alter_balance = {}
-				c.execute( 'SELECT * FROM transaction_link WHERE (vin_height = %s AND vin_txid = %s) OR (vout_height = %s AND vout_txid = %s)', (block_height, txid, block_height, txid) );
+				c.execute( 'SELECT * FROM transaction_link WHERE (vin_height = %s AND vin_txid = %s) OR (vout_height = %s AND vout_txid = %s)', (block_height, txid, block_height, txid) )
 				for e in c.fetchall():
 					addr = e['addresses']
 
@@ -293,9 +294,16 @@ def sync( db, coind_type, max_leng ):
 					cd_block['hash'],
 					datetime.fromtimestamp( cd_block['time'] ),
 					miners,
-					base64.b64encode( bz2.compress( json.dumps( block_json_reduce ) ) )
+					base64.b64encode( bz2.compress( json.dumps( block_json_reduce ).encode('utf-8') ) )
 				)
 			)
+			db.commit()
+		except Exception as e:
+			db.rollback()
+			raise e
+		finally:
+			c.close()
+		
 
 # 1 ブロック分データを巻き戻す
 # - 何度同じ height で実行しても問題ない
@@ -303,7 +311,9 @@ def sync( db, coind_type, max_leng ):
 def revert( db, coind_type, height ):
 
 	# トランザクション内で実行する
-	with db as c:
+	db.begin()
+	c = db.cursor()
+	try:
 		# ブロックヘッダの確認
 		c.execute( 'SELECT * FROM blockheader WHERE height = %s', (height,) )
 		block = c.fetchone()
@@ -354,7 +364,7 @@ def revert( db, coind_type, height ):
 			# 入力側トランザクションリンクは NULL クリア
 			# - 乱暴に vin_height, vin_txid 一致だけで消して rowcount を無視する手もあるが一応ループを回して確認する。
 			for idx in range( tx['vin_n'] ):
-				if json_tx['vin'][idx].has_key( 'txid' ):
+				if 'txid' in json_tx['vin'][idx]:
 					c.execute( 'UPDATE transaction_link SET vin_height = NULL, vin_txid = NULL, vin_idx = NULL WHERE vin_height = %s AND vin_txid = %s AND vin_idx = %s', (height, txid, idx) )
 					if c.rowcount != 1:
 						if not CVE_2018_17144( coind_type, txid ):
@@ -392,6 +402,12 @@ def revert( db, coind_type, height ):
 			c.execute( 'SELECT * FROM balance WHERE height = %s AND txid = %s', (height, txid) )
 			if len( c.fetchall() ) != 0:
 				raise Exception( height, txid, 'surviving balance' )
+		db.commit()
+	except Exception as e:
+		db.rollback()
+		raise e
+	finally:
+		c.close()
 
 	return True
 
@@ -399,7 +415,7 @@ def revert( db, coind_type, height ):
 # - 問題なければ True, 巻き戻しを行った場合 False を返す
 def check_db_state( db, coind_type ):
 	# 最新のブロック情報を取得する
-	with db as c:
+	with db.cursor() as c:
 		c.execute( 'SELECT * FROM blockheader ORDER BY height DESC LIMIT 1' )
 		block = c.fetchone()
 
@@ -426,19 +442,31 @@ def check_db_state( db, coind_type ):
 # データベースの作成とテーブルの作成、初期化を行う
 def init_db( coind_type ):
 	# 一旦標準データベースに接続してデータベースの作成を行う
-	with CloudSQL( 'mysql' ) as c:
+	db = CloudSQL ( 'mysql' )
+	db.begin()
+	c = db.cursor()
+	try:
 		# 本来であればプレイスホルダを使用したいところだが、
 		# DB 名は文字列ではないらしい MySQL のクソ仕様のため、
 		# % で SQL 文を組み立てる。coind_type は入力チェックをパスしているため、
 		# SQL インジェクションにはならないはず。
 		c.execute( 'CREATE DATABASE %s' % coind_type )
+		db.commit()
+	except Exception as e:
+		db.rollback()
+		raise e
+	finally:
+		c.close()
+		db.close()
 
 	# 作成したデータベースに接続して、テーブルを作成する
 	# MySQL のクソ仕様により、CREATE TABLE は暗黙コミットされるので
 	# トランザクションの意味はまったくないが、失敗したら手動で
 	# DB ごと消せばいいのでとりあえずこれで
 	db = CloudSQL( coind_type )
-	with db as c:
+	db.begin()
+	c = db.cursor()
+	try:
 		c.execute('''
 			CREATE TABLE state (
 				running_flag BOOL NOT NULL,
@@ -508,6 +536,12 @@ def init_db( coind_type ):
 			)
 		''')
 		c.execute( 'INSERT INTO state VALUES ( 0, NULL )' )
+		db.commit()
+	except Exception as e:
+		db.rollback()
+		raise e
+	finally:
+		c.close()
 
 	return db
 
@@ -523,15 +557,17 @@ def run( coind_type, max_leng ):
 		logging.debug( coind_type + ': DB initialized.' )
 
 	# 同時実行を防ぐため、ロックをかける
-	with db as c:
+	with db.cursor() as c:
 		# 同時実行がない場合、もしくは指定秒数以上経過していれば UPDATE に成功する
 		c.execute( 'UPDATE state SET running_flag = 1, running_time = NOW() WHERE running_flag = 0 OR TIMESTAMPADD( SECOND, %d, running_time ) < NOW()' % LOCK_TIMEOUT )
 		if c.rowcount != 1:
 			# ロック確保に失敗したらここで止める
 			raise Exception( 'running another!!' )
 
+		db.commit()
+		
 	# 開始時のポイントを覚えておく
-	with db as c:
+	with db.cursor() as c:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
 		start_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
 
@@ -541,13 +577,14 @@ def run( coind_type, max_leng ):
 		sync( db, coind_type, max_leng )
 
 	# 終了時のポイントを取得する
-	with db as c:
+	with db.cursor() as c:
 		c.execute( 'SELECT IFNULL(MAX(height)+1,0) FROM blockheader' )
 		end_block_height = c.fetchone()['IFNULL(MAX(height)+1,0)']
 
 	# ロック解除
-	with db as c:
+	with db.cursor() as c:
 		c.execute( 'UPDATE state SET running_flag = 0, running_time = NULL' )
+		db.commit()
 
 	# 実行結果をログと戻り値の双方に記述する
 	result = 'update_db: %d => %d' % ( start_block_height, end_block_height )

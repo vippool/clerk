@@ -168,7 +168,7 @@ class handler( BaseHandler ):
 		vin_type = ''
 		vin_reqSigs = []
 		db = CloudSQL( coind_type )
-		with db as c:
+		with db.cursor() as c:
 			c.execute( 'SELECT * FROM transaction_link WHERE addresses = %s AND ISNULL(vin_txid)', (' '.join( from_addr ),) )
 			for e in c.fetchall():
 				# トランザクションの生データ取得

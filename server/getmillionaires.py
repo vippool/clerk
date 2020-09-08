@@ -17,7 +17,7 @@ class handler( BaseHandler ):
 		limit = self.get_request_int(request, 'limit', 10)
 
 		db = CloudSQL( coind_type )
-		with db as c:
+		with db.cursor() as c:
 			# 現在の残高をソートして取得する
 			r = []
 			c.execute( 'SELECT * FROM current_balance ORDER BY balance DESC LIMIT %s OFFSET %s', (limit, offset) )
@@ -27,4 +27,4 @@ class handler( BaseHandler ):
 					'balance': e['balance'] / SATOSHI_COIN
 				})
 
-		self.write_json( r )
+		return self.write_json( r )

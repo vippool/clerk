@@ -28,7 +28,7 @@ class handler( BaseHandler ):
 			raise ValidationError( 'addresses', e.msg )
 
 		db = CloudSQL( coind_type )
-		with db as c:
+		with db.cursor() as c:
 			# 現在の残高を取得する
 			c.execute( 'SELECT balance, serial FROM balance WHERE addresses = %s ORDER BY serial DESC LIMIT 1', (addresses,) )
 			r = c.fetchone()
@@ -58,4 +58,4 @@ class handler( BaseHandler ):
 					'balance': e['balance'] / SATOSHI_COIN
 				})
 
-		self.write_json( { 'balance': balance, 'history': history } )
+		return self.write_json( { 'balance': balance, 'history': history } )

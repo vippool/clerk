@@ -6,7 +6,7 @@
 #                                                        #
 #========================================================#
 
-import httplib
+import http.client
 import base64
 import json
 import config
@@ -14,13 +14,13 @@ import config
 class coind_base:
 	def run( self, method, params ):
 		header = {
-			'Authorization': 'Basic %s' % base64.standard_b64encode( '%s:%s' % ( self.rpc_user, self.rpc_pass ) )
+			'Authorization': b'Basic %b' % base64.standard_b64encode( b'%b:%b' % ( self.rpc_user.encode('utf-8'), self.rpc_pass.encode('utf-8') ) )
 		}
 		body = {
 			'method': method,
 			'params': params
 		}
-		conn = httplib.HTTPConnection( self.rpc_addr, self.rpc_port )
+		conn = http.client.HTTPConnection( self.rpc_addr, self.rpc_port )
 		conn.request( 'POST', '/', json.dumps(body), header )
 		res = conn.getresponse()
 		if res.status == 200:
