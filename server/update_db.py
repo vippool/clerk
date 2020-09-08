@@ -44,7 +44,7 @@ def sync( db, coind_type, max_leng ):
 	# コインノードが保持しているブロックの高さ
 	cd_height = cd.run( 'getblockcount', [] )
 
-	# 開始時の c 内ブロック高
+	# 開始時の DB 内ブロック高
 	db.begin()
 	c = db.cursor()
 	try:
@@ -56,6 +56,7 @@ def sync( db, coind_type, max_leng ):
 		raise e
 	finally:
 		c.close()
+
 	# 開始時刻を記録
 	start_time = time.time()
 

@@ -168,9 +168,7 @@ class handler( BaseHandler ):
 		vin_type = ''
 		vin_reqSigs = []
 		db = CloudSQL( coind_type )
-		db.begin()
-		c = db.cursor()
-		try:
+		with db.cursor() as c:
 			c.execute( 'SELECT * FROM transaction_link WHERE addresses = %s AND ISNULL(vin_txid)', (' '.join( from_addr ),) )
 			for e in c.fetchall():
 				# トランザクションの生データ取得
@@ -194,12 +192,6 @@ class handler( BaseHandler ):
 
 				if input_value >= (value + fee) * SATOSHI_COIN:
 					break
-			db.commit()
-		except Exception as e:
-			db.rollback()
-			raise e
-		finally:
-			c.close()
 
 		# 残高が足りるか確認
 		if input_value < (value + fee) * SATOSHI_COIN:

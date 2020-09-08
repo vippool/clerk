@@ -32,7 +32,7 @@ def address_prefix( coind_type ):
 # BASE58 エンコード
 def b58encode( src ):
 	mapping = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-	
+
 	r = ''
 	n = int( hexlify( src ), 16 )
 	for i in range( 0, ADDRESS_LENGTH ):
@@ -98,7 +98,7 @@ def decode_coin_address( addr, coind_type, elem ):
 	# 正しければ 25 Byte になるはず
 	if len( binary ) != 25:
 		raise ValidationError( elem, 'len' )
-	
+
 	# アドレスのプレフィックスを確認
 	if binary[0:1].decode() != address_prefix( coind_type ):
 		raise ValidationError( elem, 'address_prefix' )
