@@ -62,6 +62,7 @@ class handler( BaseHandler ):
 
 		# コインノードからの生データをパース
 		json_data = json.loads( bz2.decompress( base64.b64decode( blockheader['json'] ) ) )
+
 		# 確認数を更新する
 		json_data['confirmations'] = chain_height - blockheader['height'] + 1
 

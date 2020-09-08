@@ -81,6 +81,7 @@ class handler( BaseHandler ):
 		fee = params['fee']
 		data = params.get( 'data', None )
 
+
 		# from を検査してからハッシュ値に変換する
 		from_hash = []
 		from_addr = []
@@ -184,7 +185,7 @@ class handler( BaseHandler ):
 				else:
 					if type != 'multisig':
 						continue
-					
+
 				input_value += e['value']
 				vin_txid.append( e['vout_txid'] )
 				vin_idx.append( e['vout_idx'] )

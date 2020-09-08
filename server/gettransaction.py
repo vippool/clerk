@@ -37,7 +37,7 @@ class handler( BaseHandler ):
 			for e in c.fetchall():
 				# コインノードからの生データをパース
 				json_txdata = json.loads( bz2.decompress( base64.b64decode( e['json'] ) ) )
-				
+
 				# vin_n の想定数を数える
 				vin_n = 0
 				for ee in json_txdata['vin']:

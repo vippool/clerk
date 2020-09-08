@@ -27,6 +27,7 @@ class handler( BaseHandler ):
 					'hash': e['hash'],
 					'miners': e['miners'].split(' '),
 				})
+
 			db.commit()
 		except Exception as e:
 			db.rollback()
