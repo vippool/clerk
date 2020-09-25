@@ -67,7 +67,7 @@ def sqrt( x, y ):
 	xi = inverse( x, y )
 
 	# x の (t+1)/2 乗を求める
-	r = pow( x, (t + 1) / 2, y )
+	r = pow( x, int((t + 1) / 2), y )
 
 	for i in range( s - 2, -1, -1 ):
 		n = int( 1 ) << i

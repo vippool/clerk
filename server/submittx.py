@@ -96,7 +96,7 @@ class handler( BaseHandler ):
 			raise ValidationError( 'params', 'decompress' )
 
 		# payload のハッシュ値検査
-		if sha256( payload['body'] ).hexdigest() != payload['hash']:
+		if sha256( payload['body'].encode('utf-8') ).hexdigest() != payload['hash']:
 			raise ValidationError( 'params', 'sha256' )
 
 		# payload の本体をパースする
@@ -219,18 +219,18 @@ class handler( BaseHandler ):
 		# さらにハッシュをつけて包む
 		payload = {
 			'body': payload_body,
-			'hash': sha256( payload_body ).hexdigest()
+			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
 		# taskqueue に積む
-		taskqueue.add(
-			url = '/maintain/sendrawtransaction',
-			params = {
-				'coind_type': coind_type,
-				'payload': b64encode( bz2.compress( json.dumps( payload ) ) )
-			},
-			queue_name = 'send-tx'
-		)
+		# taskqueue.add(
+		# 	url = '/maintain/sendrawtransaction',
+		# 	params = {
+		# 		'coind_type': coind_type,
+		# 		'payload': b64encode( bz2.compress( json.dumps( payload ) ) )
+		# 	},
+		# 	queue_name = 'send-tx'
+		# )
 
 		# 作成した TXID を返す
 		self.write_json( {
