@@ -147,7 +147,7 @@ def parse_pub_key( pub_key, elem ):
 # var_int 形式のバイト配列に変換する
 def var_int( n ):
 	if n < 0xFD:
-		return bytearray( chr( n ) )
+		return bytearray( n )
 	if n <= 0xFFFF:
 		return bytearray( '\xFD' + pack( '<H', n ) )
 	if n <= 0xFFFFFFFF:

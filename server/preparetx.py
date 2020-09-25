@@ -30,14 +30,13 @@ class handler( BaseHandler ):
 
 		if len( hash ) == 1:
 			# P2PKH
-			r = r + bytearray( '\x76' ) # OP_DUP
-			r = r + bytearray( '\xa9' ) # OP_HASH160
-
-			r = r + bytearray( chr( len( hash[0] ) ) ) # PUSHx
+			r = r + b'\x76' # OP_DUP
+			r = r + b'\xa9' # OP_HASH160
+			r = r + bytearray( len( hash[0] ) ) # PUSHx
 			r = r + hash[0]
 
-			r = r + bytearray( '\x88' ) # OP_EQUALVERIFY
-			r = r + bytearray( '\xac' ) # OP_CHECKSIG
+			r = r + b'\x88' # OP_EQUALVERIFY
+			r = r + b'\xac' # OP_CHECKSIG
 		else:
 			# MULTISIG
 			r = r + bytearray( chr( 0x50 + req_sigs ) ) # OP_x
@@ -62,7 +61,7 @@ class handler( BaseHandler ):
 
 	@staticmethod
 	def make_vout( script, value ):
-		return bytearray( pack( '<Q', value ) ) + var_int( len( script ) ) + script
+		return bytearray( pack( '<Q', int(value) ) ) + bytearray( var_int( len( script ) ) ) + script
 
 	def get( self, request ):
 		coind_type = self.get_request_coind_type(request)
@@ -269,7 +268,7 @@ class handler( BaseHandler ):
 			'vin_idx': vin_idx,
 			'vin_type': vin_type,
 			'vin_reqSigs': vin_reqSigs,
-			'vout_lt': hexlify( vout_lt ),
+			'vout_lt': hexlify( vout_lt ).decode('ascii'),
 			'log_data': {
 				'params_from': params_from,
 				'params_to': params_to,
@@ -280,10 +279,10 @@ class handler( BaseHandler ):
 		# さらにハッシュをつけて包む
 		payload = {
 			'body': payload_body,
-			'hash': sha256( payload_body ).hexdigest()
+			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
-		self.write_json( {
+		return self.write_json( {
 			'sign': sign_hash,
-			'payload': b64encode( bz2.compress( json.dumps( payload ) ) )
+			'payload': b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ).decode('ascii')
 		} )
