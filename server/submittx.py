@@ -27,7 +27,7 @@ class handler( BaseHandler ):
 		s = unhexlify( sign[64:128] )
 
 		# DER 形式に符号無しはないので、R の最上位ビットがたっていたら 0x00 を頭につける
-		if ord( r[0] ) & 0x80:
+		if ord( r[0:1] ) & 0x80:
 			r = bytearray( '\x00' ) + r
 
 		# S が楕円曲線群の位数 N の半分より大きければ、N-S を S' として使用する
@@ -45,11 +45,11 @@ class handler( BaseHandler ):
 		while s[0] == '\x00':
 			s = s[1:]
 
-		r = bytearray( '\x02' + chr( len( r ) ) ) + r
-		s = bytearray( '\x02' + chr( len( s ) ) ) + s
+		r = bytearray( b'\x02' + bytes( len( r ) ) ) + r
+		s = bytearray( b'\x02' + bytes( len( s ) ) ) + s
 
 		der = r + s
-		der = bytearray( '\x30' ) + chr( len( der ) ) + der
+		der = bytearray( b'\x30' ) + bytes( len( der ) ) + der
 
 		return der
 
@@ -58,11 +58,11 @@ class handler( BaseHandler ):
 		r = bytearray()
 
 		if vin_type == 'pubkeyhash':
-			s = cls.der_encode( sign[0] ) + bytearray( '\x01' )
-			r = r + bytearray( chr( len( s ) ) ) # PUSHx
+			s = cls.der_encode( sign[0] ) + bytearray( b'\x01' )
+			r = r + bytearray( len( s ) ) # PUSHx
 			r = r + s
 
-			r = r + bytearray( chr( len( pub_key ) ) ) # PUSHx
+			r = r + bytearray( len( pub_key ) ) # PUSHx
 			r = r + pub_key
 		else:
 			r = r + bytearray( '\x00' ) # OP_0
@@ -207,13 +207,13 @@ class handler( BaseHandler ):
 
 		# ログデータに追記
 		log_data['sign'] = sign
-		log_data['tx'] = hexlify( tx )
+		log_data['tx'] = hexlify( tx ).decode('ascii')
 
 
 		# キューに投げるデータを payload としてまとめる
 		payload_body = json.dumps( {
-			'tx': hexlify( tx ),
-			'log_data': log_data
+			'tx': hexlify( tx ).decode('ascii'),
+			'log_data': json.dumps(log_data)
 		} )
 
 		# さらにハッシュをつけて包む
@@ -233,6 +233,6 @@ class handler( BaseHandler ):
 		# )
 
 		# 作成した TXID を返す
-		self.write_json( {
-			'result': hexlify( sha256( sha256( tx ).digest() ).digest()[::-1] )
+		return self.write_json( {
+			'result': hexlify( sha256( sha256( tx ).digest() ).digest()[::-1] ).decode('ascii')
 		} )

@@ -149,10 +149,10 @@ def var_int( n ):
 	if n < 0xFD:
 		return bytearray( n )
 	if n <= 0xFFFF:
-		return bytearray( '\xFD' + pack( '<H', n ) )
+		return bytearray( b'\xFD' + pack( '<H', n ) )
 	if n <= 0xFFFFFFFF:
-		return bytearray( '\xFE' + pack( '<I', n ) )
-	return bytearray( '\xFF' + pack( '<Q', n ) )
+		return bytearray( b'\xFE' + pack( '<I', n ) )
+	return bytearray( b'\xFF' + pack( '<Q', n ) )
 
 # CVE-2018-17144 によって UTXO の重複使用が可能になる
 def CVE_2018_17144( coind_type, txid ):
