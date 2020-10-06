@@ -28,7 +28,7 @@ class handler( BaseHandler ):
 
 		# DER 形式に符号無しはないので、R の最上位ビットがたっていたら 0x00 を頭につける
 		if ord( r[0:1] ) & 0x80:
-			r = bytearray( b'\x00' ) + r
+			r = b'\x00' + r
 
 		# S が楕円曲線群の位数 N の半分より大きければ、N-S を S' として使用する
 		# - 必ず最上位ビットが落ちるので 1 バイト節約できるらしい
@@ -45,11 +45,12 @@ class handler( BaseHandler ):
 		while s[0] == b'\x00':
 			s = s[1:]
 
-		r = bytearray( b'\x02' + bytes( len( r ) ) ) + r
-		s = bytearray( b'\x02' + bytes( len( s ) ) ) + s
+
+		r = b'\x02' + bytes( chr( len( r ) ).encode('utf-8') ) + r
+		s = b'\x02' + bytes( chr( len( s ) ).encode('utf-8') ) + s
 
 		der = r + s
-		der = bytearray( b'\x30' ) + bytes( len( der ) ) + der
+		der = bytearray( b'\x30' ) + bytes( chr( len( der ) ).encode("utf-8") ) + der
 
 		return der
 
@@ -59,17 +60,18 @@ class handler( BaseHandler ):
 
 		if vin_type == 'pubkeyhash':
 			s = cls.der_encode( sign[0] ) + bytearray( b'\x01' )
-			r = r + bytearray( len( s ) ) # PUSHx
+			r = r + bytes( chr( len( s ) ).encode('utf-8') ) # PUSHx
+
 			r = r + s
 
-			r = r + bytearray( len( pub_key ) ) # PUSHx
+			r = r + bytes( chr( len( pub_key ) ).encode('utf-8') ) # PUSHx
 			r = r + pub_key
 		else:
 			r = r + bytearray( '\x00' ) # OP_0
 
 			for e in sign:
 				s = cls.der_encode( e ) + bytearray( '\x01' )
-				r = r + bytearray( chr( len( s ) ) ) # PUSHx
+				r = r + bytes( chr( len( s ) ).encode('utf-8') ) # PUSHx
 				r = r + s
 
 		return r
@@ -233,7 +235,6 @@ class handler( BaseHandler ):
 		# )
 
 		# 作成した TXID を返す
-		print(b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ))
 		print(b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ).decode('ascii'))
 		return self.write_json( {
 			'result': hexlify( sha256( sha256( tx ).digest() ).digest()[::-1] ).decode('ascii')
