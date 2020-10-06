@@ -233,6 +233,8 @@ class handler( BaseHandler ):
 		# )
 
 		# 作成した TXID を返す
+		print(b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ))
+		print(b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ).decode('ascii'))
 		return self.write_json( {
 			'result': hexlify( sha256( sha256( tx ).digest() ).digest()[::-1] ).decode('ascii')
 		} )
