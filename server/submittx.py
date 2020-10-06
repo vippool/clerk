@@ -28,7 +28,7 @@ class handler( BaseHandler ):
 
 		# DER 形式に符号無しはないので、R の最上位ビットがたっていたら 0x00 を頭につける
 		if ord( r[0:1] ) & 0x80:
-			r = bytearray( '\x00' ) + r
+			r = bytearray( b'\x00' ) + r
 
 		# S が楕円曲線群の位数 N の半分より大きければ、N-S を S' として使用する
 		# - 必ず最上位ビットが落ちるので 1 バイト節約できるらしい
@@ -40,9 +40,9 @@ class handler( BaseHandler ):
 			s = unhexlify( '%064X' % sn )
 
 		# 0 で始まるバイトは省略する
-		while r[0] == '\x00':
+		while r[0] == b'\x00':
 			r = r[1:]
-		while s[0] == '\x00':
+		while s[0] == b'\x00':
 			s = s[1:]
 
 		r = bytearray( b'\x02' + bytes( len( r ) ) ) + r
