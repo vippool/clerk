@@ -32,7 +32,7 @@ class handler( BaseHandler ):
 			# P2PKH
 			r = r + b'\x76' # OP_DUP
 			r = r + b'\xa9' # OP_HASH160
-			r = r + bytearray( len( hash[0] ) ) # PUSHx
+			r = r + bytearray( bytes( [len(hash[0])] ) ) # PUSHx
 			r = r + hash[0]
 
 			r = r + b'\x88' # OP_EQUALVERIFY
