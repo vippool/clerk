@@ -45,7 +45,6 @@ class handler( BaseHandler ):
 		while s[0] == b'\x00':
 			s = s[1:]
 
-
 		r = b'\x02' + bytes( chr( len( r ) ).encode('utf-8') ) + r
 		s = b'\x02' + bytes( chr( len( s ) ).encode('utf-8') ) + s
 
@@ -61,7 +60,6 @@ class handler( BaseHandler ):
 		if vin_type == 'pubkeyhash':
 			s = cls.der_encode( sign[0] ) + bytearray( b'\x01' )
 			r = r + bytes( chr( len( s ) ).encode('utf-8') ) # PUSHx
-
 			r = r + s
 
 			r = r + bytes( chr( len( pub_key ) ).encode('utf-8') ) # PUSHx
