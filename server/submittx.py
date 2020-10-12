@@ -49,26 +49,26 @@ class handler( BaseHandler ):
 		s = b'\x02' + bytes( [len( s )] ) + s
 
 		der = r + s
-		der = bytearray( b'\x30' ) + bytes( [len( der )] ) + der
+		der = b'\x30' + bytes( [len( der )] ) + der
 
 		return der
 
 	@classmethod
 	def make_script( cls, sign, pub_key, vin_type ):
-		r = bytearray()
+		r = b''
 
 		if vin_type == 'pubkeyhash':
-			s = cls.der_encode( sign[0] ) + bytearray( b'\x01' )
+			s = cls.der_encode( sign[0] ) + b'\x01'
 			r = r + bytes( [len( s )] ) # PUSHx
 			r = r + s
 
 			r = r + bytes( [len( pub_key )] ) # PUSHx
 			r = r + pub_key
 		else:
-			r = r + bytearray( '\x00' ) # OP_0
+			r = r + b'\x00' # OP_0
 
 			for e in sign:
-				s = cls.der_encode( e ) + bytearray( '\x01' )
+				s = cls.der_encode( e ) + b'\x01'
 				r = r + bytes( [len( s )] ) # PUSHx
 				r = r + s
 
@@ -180,7 +180,7 @@ class handler( BaseHandler ):
 							raise ValidationError( 'sign', 'verify' )
 
 						# preparetx に送った公開鍵をパース
-						pk_x, pk_y = ecdsa.decompress( bytearray( b64decode( from_pk[k] ) ) )
+						pk_x, pk_y = ecdsa.decompress( b64decode( from_pk[k] ) )
 						k = k + 1
 
 						# 署名検証に成功したら次へ進む
@@ -189,17 +189,17 @@ class handler( BaseHandler ):
 
 
 		# トランザクションデータの先頭はバージョン番号から始まる
-		tx = bytearray( pack( '<i', 2 ) )
+		tx = pack( '<i', 2 )
 
 		# vin の組み立て
-		tx = tx + bytearray( var_int( len( vin_txid ) ) )
+		tx = tx + var_int( len( vin_txid ) )
 		for i in range( 0, len( vin_txid ) ):
 			# アンロックスクリプト (入力スクリプト) の作成
 			script = self.make_script( sign[i], pub_key, vin_type )
 
 			# 入力トランザクションを追加
-			tx = tx + bytearray( unhexlify( vin_txid[i] )[::-1] + pack( '<I', vin_idx[i] ) )
-			tx = tx + var_int( len( script ) ) + script + bytearray( pack( '<I', 0 ) )
+			tx = tx + unhexlify( vin_txid[i] )[::-1] + pack( '<I', vin_idx[i] )
+			tx = tx + var_int( len( script ) ) + script + pack( '<I', 0 )
 
 		# vout～locktime 区間を連結
 		tx = tx + vout_lt
