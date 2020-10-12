@@ -50,7 +50,7 @@ class handler( BaseHandler ):
 
 
 		# ロギング
-		log_data = json.loads(payload['log_data'])
+		log_data = payload['log_data']
 		log_data['result'] = json.loads(r[1])
 		logging.debug(
 			json.dumps( log_data, ensure_ascii=False, indent=2, sort_keys=True, separators=(',', ': ') )

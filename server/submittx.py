@@ -213,7 +213,7 @@ class handler( BaseHandler ):
 		# キューに投げるデータを payload としてまとめる
 		payload_body = json.dumps( {
 			'tx': hexlify( tx ).decode('ascii'),
-			'log_data': json.dumps(log_data)
+			'log_data': log_data
 		} )
 
 		# さらにハッシュをつけて包む
