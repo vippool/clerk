@@ -222,7 +222,7 @@ class handler( BaseHandler ):
 			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
-		taskqueue に積む
+		# taskqueue に積む
 		taskqueue.add(
 			url = '/maintain/sendrawtransaction',
 			params = {
