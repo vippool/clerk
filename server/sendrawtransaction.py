@@ -46,12 +46,12 @@ class handler( BaseHandler ):
 			r = cd.run( 'sendrawtransaction', [ payload['tx'] ] )
 		except Exception as e:
 			# コインノードがエラーを返すと例外が飛んでくるのでもみ消してログを出す
-			r = e.args
+			r = json.loads(e.args[1])
 
 
 		# ロギング
 		log_data = payload['log_data']
-		log_data['result'] = json.loads(r[1])
+		log_data['result'] = r
 		logging.debug(
 			json.dumps( log_data, ensure_ascii=False, indent=2, sort_keys=True, separators=(',', ': ') )
 		)
@@ -59,5 +59,5 @@ class handler( BaseHandler ):
 
 		# 作成した TXID を返す
 		return self.write_json( {
-			'result': json.loads(r[1])
+			'result': r
 		} )
