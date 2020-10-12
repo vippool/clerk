@@ -45,11 +45,11 @@ class handler( BaseHandler ):
 		while s[0] == b'\x00':
 			s = s[1:]
 
-		r = b'\x02' + bytes( chr( len( r ) ).encode('utf-8') ) + r
-		s = b'\x02' + bytes( chr( len( s ) ).encode('utf-8') ) + s
+		r = b'\x02' + bytes( [len( r )] ) + r
+		s = b'\x02' + bytes( [len( s )] ) + s
 
 		der = r + s
-		der = bytearray( b'\x30' ) + bytes( chr( len( der ) ).encode("utf-8") ) + der
+		der = bytearray( b'\x30' ) + bytes( [len( der )] ) + der
 
 		return der
 
@@ -59,17 +59,17 @@ class handler( BaseHandler ):
 
 		if vin_type == 'pubkeyhash':
 			s = cls.der_encode( sign[0] ) + bytearray( b'\x01' )
-			r = r + bytes( chr( len( s ) ).encode('utf-8') ) # PUSHx
+			r = r + bytes( [len( s )] ) # PUSHx
 			r = r + s
 
-			r = r + bytes( chr( len( pub_key ) ).encode('utf-8') ) # PUSHx
+			r = r + bytes( [len( pub_key )] ) # PUSHx
 			r = r + pub_key
 		else:
 			r = r + bytearray( '\x00' ) # OP_0
 
 			for e in sign:
 				s = cls.der_encode( e ) + bytearray( '\x01' )
-				r = r + bytes( chr( len( s ) ).encode('utf-8') ) # PUSHx
+				r = r + bytes( [len( s )] ) # PUSHx
 				r = r + s
 
 		return r
@@ -222,7 +222,7 @@ class handler( BaseHandler ):
 			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
-		# taskqueue に積む
+		taskqueue に積む
 		taskqueue.add(
 			url = '/maintain/sendrawtransaction',
 			params = {
