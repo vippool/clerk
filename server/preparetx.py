@@ -61,7 +61,7 @@ class handler( BaseHandler ):
 
 	@staticmethod
 	def make_vout( script, value ):
-		return bytearray( pack( '<Q', int(value) ) ) + bytearray( var_int( len( script ) ) ) + script
+		return bytearray( pack( '<Q', int(value) ) ) + var_int( len( script ) ) + script
 
 	def get( self, request ):
 		coind_type = self.get_request_coind_type(request)

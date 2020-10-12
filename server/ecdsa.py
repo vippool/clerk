@@ -398,10 +398,3 @@ if __name__ == '__main__':
 		# 署名作成と検証
 		r, s = sign( h, k )
 		print(verify( h, r, s, pkx, pky ))
-
-	r, s = sign(hash=int("3f1bd09e307847ee84c63de87ec76ddb6f262160ff3699016b64386ae04af025", 16), privKey=int("CD65381FE54619FF79F8907353064DB471DA99B05B7F39024370473072ED85E4", 16))
-	print(hex(r), hex(s))
-	print(r, s)
-	n, e = pubKey(int("CD65381FE54619FF79F8907353064DB471DA99B05B7F39024370473072ED85E4", 16))
-	print(hex(n), hex(e))
-	print(n, e)
