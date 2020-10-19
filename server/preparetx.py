@@ -256,7 +256,7 @@ class handler( BaseHandler ):
 		b64_pk = []
 		for e in from_pk:
 			if e is not None:
-				b64_pk.append( b64encode( e ) )
+				b64_pk.append( b64encode( e ).decode('ascii') )
 			else:
 				b64_pk.append( None )
 

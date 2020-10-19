@@ -37,7 +37,7 @@ def b58encode( src ):
 	n = int( hexlify( src ), 16 )
 	for i in range( 0, ADDRESS_LENGTH ):
 		r = mapping[n % 58] + r
-		n = int(n / 58)
+		n = int(n // 58)
 
 	return r
 
