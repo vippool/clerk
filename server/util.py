@@ -37,7 +37,7 @@ def b58encode( src ):
 	n = int( hexlify( src ), 16 )
 	for i in range( 0, ADDRESS_LENGTH ):
 		r = mapping[n % 58] + r
-		n = int(n / 58)
+		n = int(n // 58)
 
 	return r
 
@@ -147,12 +147,12 @@ def parse_pub_key( pub_key, elem ):
 # var_int 形式のバイト配列に変換する
 def var_int( n ):
 	if n < 0xFD:
-		return bytearray( chr( n ) )
+		return bytearray( bytes([n]) )
 	if n <= 0xFFFF:
-		return bytearray( '\xFD' + pack( '<H', n ) )
+		return bytearray( b'\xFD' + pack( '<H', n ) )
 	if n <= 0xFFFFFFFF:
-		return bytearray( '\xFE' + pack( '<I', n ) )
-	return bytearray( '\xFF' + pack( '<Q', n ) )
+		return bytearray( b'\xFE' + pack( '<I', n ) )
+	return bytearray( b'\xFF' + pack( '<Q', n ) )
 
 # CVE-2018-17144 によって UTXO の重複使用が可能になる
 def CVE_2018_17144( coind_type, txid ):

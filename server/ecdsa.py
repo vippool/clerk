@@ -37,7 +37,7 @@ def inverse( x, y ):
 
 	# 拡張ユークリッドの互除法
 	while r1 > 0:
-		q1 = r0 / r1
+		q1 = r0 // r1
 		r2 = r0 % r1
 		a2 = a0 - q1 * a1
 		r0 = r1
@@ -67,7 +67,7 @@ def sqrt( x, y ):
 	xi = inverse( x, y )
 
 	# x の (t+1)/2 乗を求める
-	r = pow( x, (t + 1) / 2, y )
+	r = pow( x, int((t + 1) // 2), y )
 
 	for i in range( s - 2, -1, -1 ):
 		n = int( 1 ) << i
@@ -85,9 +85,9 @@ class montgomery:
 	@staticmethod
 	def mng_mult( a, b ):
 		t = a * b
-		u = t & mng_prm_m
+		u = int(t) & mng_prm_m
 		u = (u * mng_prm_d) & mng_prm_m
-		k = (t + u * ec_prm_p) >> ec_prm_l
+		k = int(t + u * ec_prm_p) >> ec_prm_l
 		if k >= ec_prm_p:
 			k = k - ec_prm_p
 		return k

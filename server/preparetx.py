@@ -26,43 +26,42 @@ import bz2
 class handler( BaseHandler ):
 	@staticmethod
 	def make_script( hash, pk, req_sigs ):
-		r = bytearray()
+		r = b''
 
 		if len( hash ) == 1:
 			# P2PKH
-			r = r + bytearray( '\x76' ) # OP_DUP
-			r = r + bytearray( '\xa9' ) # OP_HASH160
-
-			r = r + bytearray( chr( len( hash[0] ) ) ) # PUSHx
+			r = r + b'\x76' # OP_DUP
+			r = r + b'\xa9' # OP_HASH160
+			r = r + bytes( [len(hash[0])] ) # PUSHx
 			r = r + hash[0]
 
-			r = r + bytearray( '\x88' ) # OP_EQUALVERIFY
-			r = r + bytearray( '\xac' ) # OP_CHECKSIG
+			r = r + b'\x88' # OP_EQUALVERIFY
+			r = r + b'\xac' # OP_CHECKSIG
 		else:
 			# MULTISIG
-			r = r + bytearray( chr( 0x50 + req_sigs ) ) # OP_x
+			r = r + bytes( [0x50 + req_sigs] ) # OP_x
 			for e in pk:
-				r = r + bytearray( chr( len( e ) ) ) # PUSHx
+				r = r + bytes( [len( e )] ) # PUSHx
 				r = r + e
-			r = r + bytearray( chr( 0x50 + len( pk ) ) ) # OP_x
-			r = r + bytearray( '\xae' ) # OP_CHECKMULTISIG
+			r = r + bytes( [0x50 + len( pk )] ) # OP_x
+			r = r + b'\xae' # OP_CHECKMULTISIG
 
 		return r
 
 	@staticmethod
 	def make_data_script( data ):
-		r = bytearray()
+		r = b''
 
-		r = r + bytearray( '\x6a' ) # OP_RETURN
+		r = r + b'\x6a' # OP_RETURN
 
-		r = r + bytearray( chr( len( data ) ) ) # PUSHx
+		r = r + bytes( [len( data )] ) # PUSHx
 		r = r + data
 
 		return r
 
 	@staticmethod
 	def make_vout( script, value ):
-		return bytearray( pack( '<Q', value ) ) + var_int( len( script ) ) + script
+		return pack( '<Q', int(value) ) + var_int( len( script ) ) + script
 
 	def get( self, request ):
 		coind_type = self.get_request_coind_type(request)
@@ -199,7 +198,7 @@ class handler( BaseHandler ):
 
 
 		vout_n = 0
-		vout_lt = bytearray()
+		vout_lt = b''
 
 		# vout[0] (送金出力) の作成
 		vout_lt = vout_lt + self.make_vout( self.make_script( to_hash, to_pk, req_sigs ), value * SATOSHI_COIN )
@@ -217,7 +216,7 @@ class handler( BaseHandler ):
 			vout_n += 1
 
 		# vout～locktime 区間のバイナリ組み立て
-		vout_lt = var_int( vout_n ) + vout_lt + bytearray( pack( '<I', 0 ) )
+		vout_lt = var_int( vout_n ) + vout_lt + pack( '<I', 0 )
 
 
 		# 入力トランザクションごとに署名対象のハッシュ値を求める
@@ -228,12 +227,12 @@ class handler( BaseHandler ):
 			script = self.make_script( from_hash, from_pk, vin_reqSigs[i] );
 
 			# 先頭は vin の個数
-			vin = bytearray( var_int( len( vin_txid ) ) )
+			vin = var_int( len( vin_txid ) )
 
 			# 全入力トランザクションを結合
 			for j in range( 0, len( vin_txid ) ):
 				# 入力トランザクションを追加
-				vin = vin + bytearray( unhexlify( vin_txid[j] )[::-1] + pack( '<I', vin_idx[j] ) )
+				vin = vin + unhexlify( vin_txid[j] )[::-1] + pack( '<I', vin_idx[j] )
 
 				# 該当する入力のときだけスクリプトを挿入
 				if i == j:
@@ -242,10 +241,10 @@ class handler( BaseHandler ):
 					vin = vin + var_int( 0 )
 
 				# シーケンスは 0 固定
-				vin = vin + bytearray( pack( '<I', 0 ) )
+				vin = vin + pack( '<I', 0 )
 
 			# txCopy を完成させる
-			tx = bytearray( pack( '<i', 2 ) ) + vin + vout_lt + bytearray( pack( '<I', 1 ) )
+			tx = pack( '<i', 2 ) + vin + vout_lt + pack( '<I', 1 )
 
 			# SHA256 ハッシュを計算して署名対象のハッシュ値とする
 			sign_hash.append({
@@ -257,7 +256,7 @@ class handler( BaseHandler ):
 		b64_pk = []
 		for e in from_pk:
 			if e is not None:
-				b64_pk.append( b64encode( e ) )
+				b64_pk.append( b64encode( e ).decode('ascii') )
 			else:
 				b64_pk.append( None )
 
@@ -269,7 +268,7 @@ class handler( BaseHandler ):
 			'vin_idx': vin_idx,
 			'vin_type': vin_type,
 			'vin_reqSigs': vin_reqSigs,
-			'vout_lt': hexlify( vout_lt ),
+			'vout_lt': hexlify( vout_lt ).decode('ascii'),
 			'log_data': {
 				'params_from': params_from,
 				'params_to': params_to,
@@ -280,10 +279,10 @@ class handler( BaseHandler ):
 		# さらにハッシュをつけて包む
 		payload = {
 			'body': payload_body,
-			'hash': sha256( payload_body ).hexdigest()
+			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
-		self.write_json( {
+		return self.write_json( {
 			'sign': sign_hash,
-			'payload': b64encode( bz2.compress( json.dumps( payload ) ) )
+			'payload': b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ).decode('ascii')
 		} )

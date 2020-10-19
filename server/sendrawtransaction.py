@@ -29,7 +29,7 @@ class handler( BaseHandler ):
 			raise ValidationError( 'payload', 'decompress' )
 
 		# payload のハッシュ値検査
-		if sha256( payload['body'] ).hexdigest() != payload['hash']:
+		if sha256( payload['body'].encode('utf-8') ).hexdigest() != payload['hash']:
 			raise ValidationError( 'payload', 'sha256' )
 
 		# payload の本体をパースする
@@ -58,6 +58,6 @@ class handler( BaseHandler ):
 
 
 		# 作成した TXID を返す
-		self.write_json( {
+		return self.write_json( {
 			'result': r
 		} )

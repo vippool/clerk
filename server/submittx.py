@@ -27,8 +27,8 @@ class handler( BaseHandler ):
 		s = unhexlify( sign[64:128] )
 
 		# DER 形式に符号無しはないので、R の最上位ビットがたっていたら 0x00 を頭につける
-		if ord( r[0] ) & 0x80:
-			r = bytearray( '\x00' ) + r
+		if ord( r[0:1] ) & 0x80:
+			r = b'\x00' + r
 
 		# S が楕円曲線群の位数 N の半分より大きければ、N-S を S' として使用する
 		# - 必ず最上位ビットが落ちるので 1 バイト節約できるらしい
@@ -40,36 +40,36 @@ class handler( BaseHandler ):
 			s = unhexlify( '%064X' % sn )
 
 		# 0 で始まるバイトは省略する
-		while r[0] == '\x00':
+		while r[0] == b'\x00':
 			r = r[1:]
-		while s[0] == '\x00':
+		while s[0] == b'\x00':
 			s = s[1:]
 
-		r = bytearray( '\x02' + chr( len( r ) ) ) + r
-		s = bytearray( '\x02' + chr( len( s ) ) ) + s
+		r = b'\x02' + bytes( [len( r )] ) + r
+		s = b'\x02' + bytes( [len( s )] ) + s
 
 		der = r + s
-		der = bytearray( '\x30' ) + chr( len( der ) ) + der
+		der = b'\x30' + bytes( [len( der )] ) + der
 
 		return der
 
 	@classmethod
 	def make_script( cls, sign, pub_key, vin_type ):
-		r = bytearray()
+		r = b''
 
 		if vin_type == 'pubkeyhash':
-			s = cls.der_encode( sign[0] ) + bytearray( '\x01' )
-			r = r + bytearray( chr( len( s ) ) ) # PUSHx
+			s = cls.der_encode( sign[0] ) + b'\x01'
+			r = r + bytes( [len( s )] ) # PUSHx
 			r = r + s
 
-			r = r + bytearray( chr( len( pub_key ) ) ) # PUSHx
+			r = r + bytes( [len( pub_key )] ) # PUSHx
 			r = r + pub_key
 		else:
-			r = r + bytearray( '\x00' ) # OP_0
+			r = r + b'\x00' # OP_0
 
 			for e in sign:
-				s = cls.der_encode( e ) + bytearray( '\x01' )
-				r = r + bytearray( chr( len( s ) ) ) # PUSHx
+				s = cls.der_encode( e ) + b'\x01'
+				r = r + bytes( [len( s )] ) # PUSHx
 				r = r + s
 
 		return r
@@ -96,7 +96,7 @@ class handler( BaseHandler ):
 			raise ValidationError( 'params', 'decompress' )
 
 		# payload のハッシュ値検査
-		if sha256( payload['body'] ).hexdigest() != payload['hash']:
+		if sha256( payload['body'].encode('utf-8') ).hexdigest() != payload['hash']:
 			raise ValidationError( 'params', 'sha256' )
 
 		# payload の本体をパースする
@@ -180,7 +180,7 @@ class handler( BaseHandler ):
 							raise ValidationError( 'sign', 'verify' )
 
 						# preparetx に送った公開鍵をパース
-						pk_x, pk_y = ecdsa.decompress( bytearray( b64decode( from_pk[k] ) ) )
+						pk_x, pk_y = ecdsa.decompress( b64decode( from_pk[k] ) )
 						k = k + 1
 
 						# 署名検証に成功したら次へ進む
@@ -189,17 +189,17 @@ class handler( BaseHandler ):
 
 
 		# トランザクションデータの先頭はバージョン番号から始まる
-		tx = bytearray( pack( '<i', 2 ) )
+		tx = pack( '<i', 2 )
 
 		# vin の組み立て
-		tx = tx + bytearray( var_int( len( vin_txid ) ) )
+		tx = tx + var_int( len( vin_txid ) )
 		for i in range( 0, len( vin_txid ) ):
 			# アンロックスクリプト (入力スクリプト) の作成
 			script = self.make_script( sign[i], pub_key, vin_type )
 
 			# 入力トランザクションを追加
-			tx = tx + bytearray( unhexlify( vin_txid[i] )[::-1] + pack( '<I', vin_idx[i] ) )
-			tx = tx + var_int( len( script ) ) + script + bytearray( pack( '<I', 0 ) )
+			tx = tx + unhexlify( vin_txid[i] )[::-1] + pack( '<I', vin_idx[i] )
+			tx = tx + var_int( len( script ) ) + script + pack( '<I', 0 )
 
 		# vout～locktime 区間を連結
 		tx = tx + vout_lt
@@ -207,19 +207,19 @@ class handler( BaseHandler ):
 
 		# ログデータに追記
 		log_data['sign'] = sign
-		log_data['tx'] = hexlify( tx )
+		log_data['tx'] = hexlify( tx ).decode('ascii')
 
 
 		# キューに投げるデータを payload としてまとめる
 		payload_body = json.dumps( {
-			'tx': hexlify( tx ),
+			'tx': hexlify( tx ).decode('ascii'),
 			'log_data': log_data
 		} )
 
 		# さらにハッシュをつけて包む
 		payload = {
 			'body': payload_body,
-			'hash': sha256( payload_body ).hexdigest()
+			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
 		# taskqueue に積む
@@ -233,6 +233,6 @@ class handler( BaseHandler ):
 		)
 
 		# 作成した TXID を返す
-		self.write_json( {
-			'result': hexlify( sha256( sha256( tx ).digest() ).digest()[::-1] )
+		return self.write_json( {
+			'result': hexlify( sha256( sha256( tx ).digest() ).digest()[::-1] ).decode('ascii')
 		} )

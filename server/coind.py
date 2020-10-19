@@ -29,7 +29,7 @@ class coind_base:
 				return js['result']
 			raise Exception( 'coind error: %s' % js['error'] )
 		else:
-			raise Exception( 'coind error: %d' % res.status, res.read() )
+			raise Exception( 'coind error: %d' % res.status, json.loads(res.read()) )
 
 class monacoind( coind_base ):
 	def __init__( self ):
