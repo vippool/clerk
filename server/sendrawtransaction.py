@@ -46,7 +46,8 @@ class handler( BaseHandler ):
 			r = cd.run( 'sendrawtransaction', [ payload['tx'] ] )
 		except Exception as e:
 			# コインノードがエラーを返すと例外が飛んでくるのでもみ消してログを出す
-			r = json.loads(e.args[1])
+			print(e.args)
+			r = str(e.args[0]) + ',' + str(json.loads(e.args[1]))
 
 
 		# ロギング
