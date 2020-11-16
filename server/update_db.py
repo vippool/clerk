@@ -19,6 +19,7 @@ import json
 import copy
 import time
 import MySQLdb
+from google.cloud import tasks_v2
 
 TIMEOUT = 480.0               # sync のタイムアウト時間 (秒)
 LOCK_TIMEOUT = 900            # ロックのタイムアウト時間 (秒)
@@ -595,11 +596,35 @@ def run( coind_type, max_leng ):
 # アップデートをシリアライズするため queue を経由する
 class handler( BaseHandler ):
 	def add_taskqueue( self, queue_name, coind_type, max_leng ):
-		taskqueue.add(
-			url = '/maintain/cron/update_db',
-			params = { 'coind_type': coind_type, 'max_leng': max_leng },
-			queue_name = queue_name
-		)
+		# Taskクライアントを取得
+		client = tasks_v2.CloudTasksClient()
+
+		# プロジェクトID，ロケーション，キューID
+		project = 'プロジェクトID'
+		location = 'ロケーション'
+
+		# タスクを管理するAppEngineタスクハンドラ
+		relative_uri = url_for('maintain/cron/update_db')
+
+		payload = {'coind_type': coind_type, 'max_leng': max_leng}
+		converted_payload = json.dumps(payload).encode()
+
+		# タスクの作成
+		task = {
+			'app_engine_http_request': {
+				'http_method': 'POST',
+				'relative_uri': relative_uri
+			}
+		}
+		task['app_engine_http_request']['body'] = converted_payload
+		task['app_engine_http_request']['headers'] = {'Content-type': 'application/json'}
+		
+
+		# 完全修飾のキューの名前を作成
+		parent = client.queue_path(project, location, queue_name)
+
+		# タスクをキューに追加する
+		task_response = client.create_task(parent, task)
 
 	def get( self ):
 		self.add_taskqueue( 'update-main-db-monacoind', 'monacoind', 7000 )
