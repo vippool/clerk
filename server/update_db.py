@@ -606,8 +606,8 @@ class handler( BaseHandler ):
 		# タスクを管理するAppEngineタスクハンドラ
 		relative_uri = url_for('maintain/cron/update_db')
 
-		payload = {'coind_type': coind_type, 'max_leng': max_leng}
-		converted_payload = json.dumps(payload).encode()
+		task_body = {'coind_type': coind_type, 'max_leng': max_leng}
+		converted_task_body = json.dumps(task_body).encode()
 
 		# タスクの作成
 		task = {
@@ -616,7 +616,7 @@ class handler( BaseHandler ):
 				'relative_uri': relative_uri
 			}
 		}
-		task['app_engine_http_request']['body'] = converted_payload
+		task['app_engine_http_request']['body'] = converted_task_body
 		task['app_engine_http_request']['headers'] = {'Content-type': 'application/json'}
 		
 
