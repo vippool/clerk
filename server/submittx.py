@@ -19,7 +19,8 @@ from base64 import b64decode
 import ecdsa
 import json
 import bz2
-from google.cloud import tasks_v2
+import config
+from cloudtasks import CloudTasksClient
 
 class handler( BaseHandler ):
 	@staticmethod
@@ -223,36 +224,21 @@ class handler( BaseHandler ):
 			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
-		# Cloud Tasks に積む
-		# Taskクライアントを取得
-		client = tasks_v2.CloudTasksClient()
-
-		# プロジェクトID，ロケーション，キューID
-		project = 'プロジェクトID'
-		location = 'ロケーション'
-
-		# タスクを管理するAppEngineタスクハンドラ
-		relative_uri = url_for('maintain/sendrawtransaction')
-
-		task_body = {'coind_type': coind_type, 'payload': b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ).decode('ascii')}
-		converted_task_body = json.dumps(task_body).encode()
-
-		# タスクの作成
+		client = CloudTasksClient()
+		parent = client.queue_path( config.gcp_project_id, config.gcp_location_id, 'send-tx' )
+		task_request_body = json.dumps( {
+			'coind_type': coind_type,
+			'payload': b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ).decode('ascii')
+		}, separators=( ',', ':' ) ).encode()
 		task = {
 			'app_engine_http_request': {
 				'http_method': 'POST',
-				'relative_uri': relative_uri
+				'relative_uri': '/maintain/sendrawtransaction',
+				'headers': {'Content-Type': 'application/json'},
+				'body': task_request_body
 			}
 		}
-		task['app_engine_http_request']['body'] = converted_task_body
-		task['app_engine_http_request']['headers'] = {'Content-type': 'application/json'}
-		
-
-		# 完全修飾のキューの名前を作成
-		parent = client.queue_path(project, location, queue_name)
-
-		# タスクをキューに追加する
-		task_response = client.create_task(parent, task)
+		client.create_task( parent=parent, task=task )
 
 		# 作成した TXID を返す
 		return self.write_json( {
