@@ -19,7 +19,8 @@ import json
 import copy
 import time
 import MySQLdb
-from google.cloud import tasks_v2
+import config
+from cloudtasks import CloudTasksClient
 
 TIMEOUT = 480.0               # sync のタイムアウト時間 (秒)
 LOCK_TIMEOUT = 900            # ロックのタイムアウト時間 (秒)
@@ -595,40 +596,26 @@ def run( coind_type, max_leng ):
 
 # アップデートをシリアライズするため queue を経由する
 class handler( BaseHandler ):
-	def add_taskqueue( self, queue_name, coind_type, max_leng ):
-		# Taskクライアントを取得
-		client = tasks_v2.CloudTasksClient()
-
-		# プロジェクトID，ロケーション，キューID
-		project = 'プロジェクトID'
-		location = 'ロケーション'
-
-		# タスクを管理するAppEngineタスクハンドラ
-		relative_uri = url_for('maintain/cron/update_db')
-
-		task_body = {'coind_type': coind_type, 'max_leng': max_leng}
-		converted_task_body = json.dumps(task_body).encode()
-
-		# タスクの作成
+	def add_cloudtasks( self, queue_name, coind_type, max_leng ):
+		client = CloudTasksClient()
+		parent = client.queue_path( config.gcp_project_id, config.gcp_location_id, queue_name )
+		task_request_body = json.dumps( {
+			'coind_type': coind_type,
+			'max_leng': max_leng
+		}, separators=( ',', ':' ) ).encode()
 		task = {
 			'app_engine_http_request': {
 				'http_method': 'POST',
-				'relative_uri': relative_uri
+				'relative_uri': '/maintain/cron/update_db',
+				'headers': {'Content-Type': 'application/json'},
+				'body': task_request_body
 			}
 		}
-		task['app_engine_http_request']['body'] = converted_task_body
-		task['app_engine_http_request']['headers'] = {'Content-type': 'application/json'}
-		
-
-		# 完全修飾のキューの名前を作成
-		parent = client.queue_path(project, location, queue_name)
-
-		# タスクをキューに追加する
-		task_response = client.create_task(parent, task)
+		client.create_task( parent=parent, task=task )
 
 	def get( self ):
-		self.add_taskqueue( 'update-main-db-monacoind', 'monacoind', 7000 )
-		self.add_taskqueue( 'update-main-db-monacoind-test', 'monacoind_test', 7000 )
+		self.add_cloudtasks( 'update-main-db-monacoind', 'monacoind', 7000 )
+		self.add_cloudtasks( 'update-main-db-monacoind-test', 'monacoind_test', 7000 )
 		return "OK"
 
 	def post( self, request ):
