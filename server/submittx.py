@@ -19,6 +19,8 @@ from base64 import b64decode
 import ecdsa
 import json
 import bz2
+import config
+from cloudtasks import CloudTasksClient
 
 class handler( BaseHandler ):
 	@staticmethod
@@ -222,15 +224,21 @@ class handler( BaseHandler ):
 			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
-		# taskqueue に積む
-		taskqueue.add(
-			url = '/maintain/sendrawtransaction',
-			params = {
-				'coind_type': coind_type,
-				'payload': b64encode( bz2.compress( json.dumps( payload ) ) )
-			},
-			queue_name = 'send-tx'
-		)
+		client = CloudTasksClient()
+		parent = client.queue_path( config.gcp_project_id, config.gcp_location_id, 'send-tx' )
+		task_request_body = json.dumps( {
+			'coind_type': coind_type,
+			'payload': b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ).decode('ascii')
+		}, separators=( ',', ':' ) ).encode()
+		task = {
+			'app_engine_http_request': {
+				'http_method': 'POST',
+				'relative_uri': '/maintain/sendrawtransaction',
+				'headers': {'Content-Type': 'application/json'},
+				'body': task_request_body
+			}
+		}
+		client.create_task( parent=parent, task=task )
 
 		# 作成した TXID を返す
 		return self.write_json( {

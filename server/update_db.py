@@ -19,6 +19,8 @@ import json
 import copy
 import time
 import MySQLdb
+import config
+from cloudtasks import CloudTasksClient
 
 TIMEOUT = 480.0               # sync のタイムアウト時間 (秒)
 LOCK_TIMEOUT = 900            # ロックのタイムアウト時間 (秒)
@@ -594,16 +596,26 @@ def run( coind_type, max_leng ):
 
 # アップデートをシリアライズするため queue を経由する
 class handler( BaseHandler ):
-	def add_taskqueue( self, queue_name, coind_type, max_leng ):
-		taskqueue.add(
-			url = '/maintain/cron/update_db',
-			params = { 'coind_type': coind_type, 'max_leng': max_leng },
-			queue_name = queue_name
-		)
+	def add_cloudtasks( self, queue_name, coind_type, max_leng ):
+		client = CloudTasksClient()
+		parent = client.queue_path( config.gcp_project_id, config.gcp_location_id, queue_name )
+		task_request_body = json.dumps( {
+			'coind_type': coind_type,
+			'max_leng': max_leng
+		}, separators=( ',', ':' ) ).encode()
+		task = {
+			'app_engine_http_request': {
+				'http_method': 'POST',
+				'relative_uri': '/maintain/cron/update_db',
+				'headers': {'Content-Type': 'application/json'},
+				'body': task_request_body
+			}
+		}
+		client.create_task( parent=parent, task=task )
 
 	def get( self ):
-		self.add_taskqueue( 'update-main-db-monacoind', 'monacoind', 7000 )
-		self.add_taskqueue( 'update-main-db-monacoind-test', 'monacoind_test', 7000 )
+		self.add_cloudtasks( 'update-main-db-monacoind', 'monacoind', 7000 )
+		self.add_cloudtasks( 'update-main-db-monacoind-test', 'monacoind_test', 7000 )
 		return "OK"
 
 	def post( self, request ):

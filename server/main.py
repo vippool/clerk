@@ -80,7 +80,7 @@ def sendrawtx():
 @app.route("/maintain/cron/update_db", methods=["GET", "POST"])
 def updateDb():
     if request.method == "GET":
-        return update_db.handler().get(request)
+        return update_db.handler().get()
     else:
         return update_db.handler().post(request)
 
