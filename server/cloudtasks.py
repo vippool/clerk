@@ -1,4 +1,4 @@
-#========================================================#
+﻿#========================================================#
 #                                                        #
 #  VP-clerk: cloudtasks.py - Cloud Tasks 接続クラス     　 #
 #                                                        #
@@ -13,7 +13,7 @@ from google.cloud.tasks_v2.services.cloud_tasks.transports import CloudTasksGrpc
 import grpc
 
 def CloudTasksClient():
-    if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
+    if os.getenv('GAE_ENV', '').startswith('standard'):
         return tasks_v2.CloudTasksClient()
     else:
         # ローカル環境等にエミュレータが存在する場合を想定

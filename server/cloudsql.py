@@ -12,7 +12,7 @@ import MySQLdb
 import MySQLdb.cursors
 
 def CloudSQL( coind_type ):
-	if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
+	if os.getenv('GAE_ENV', '').startswith('standard'):
 		return MySQLdb.connect(
 			unix_socket = os.path.join( '/cloudsql', config.cloudsql_name ),
 			user = config.cloudsql_user,

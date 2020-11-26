@@ -22,7 +22,7 @@ class handler( BaseHandler ):
 
 		# payload を展開する
 		try:
-			payload = json.loads( bz2.decompress( b64decode( request.json['payload'] ) ) )
+			payload = json.loads( bz2.decompress( b64decode( request.form['payload'] ) ) )
 		except ValueError as e:
 			raise ValidationError( 'payload', e.msg )
 		except Exception as e:

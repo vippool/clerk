@@ -8,6 +8,7 @@
 
 import json
 from coind import coind_factory
+from urllib.parse import parse_qs
 
 # バリデーションに失敗した場合に投げる例外
 class ValidationError( Exception ):
@@ -18,9 +19,11 @@ class ValidationError( Exception ):
 class BaseHandler():
 	def get_request_coind_type( self, request ):
 		if request.method == "POST":
-		    coind_type = request.json["coind_type"]
+		    coind_type = request.form.get("coind_type")
+		    if coind_type is None:
+		    	coind_type = parse_qs( request.data.decode('utf-8') )['coind_type'][0]
 		else:
-		    coind_type = request.args.get("coind_type")
+		    coind_type = request.args["coind_type"]
 
 		# ベリファイのためにクライアントを構築してみる
 		try:
@@ -32,12 +35,9 @@ class BaseHandler():
 
 	def get_request_int( self, request, name, default = None ):
 		if request.method == "POST":
-			n = request.json[name]
+			n = request.form.get(name, default)
 		else:
-			n = request.args.get(name)
-
-		if n is None:
-			return default
+			n = request.args.get(name, default)
 
 		try:
 			return int( n )

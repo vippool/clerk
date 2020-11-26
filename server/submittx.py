@@ -16,6 +16,7 @@ from binascii import unhexlify
 from hashlib import sha256
 from base64 import b64encode
 from base64 import b64decode
+from urllib.parse import parse_qs, urlencode
 import ecdsa
 import json
 import bz2
@@ -81,7 +82,10 @@ class handler( BaseHandler ):
 
 		# パラメータを取得する
 		try:
-			params = request.json["params"]
+			params = request.form.get("params")
+			if params is None:
+				params = parse_qs( request.data.decode('utf-8') )['params'][0]
+			params = json.loads( params )
 		except ValueError as e:
 			raise ValidationError( 'params', e.msg )
 
@@ -224,17 +228,18 @@ class handler( BaseHandler ):
 			'hash': sha256( payload_body.encode('utf-8') ).hexdigest()
 		}
 
+		# タスクとして送信データを積む
 		client = CloudTasksClient()
 		parent = client.queue_path( config.gcp_project_id, config.gcp_location_id, 'send-tx' )
-		task_request_body = json.dumps( {
+		task_request_body = urlencode( {
 			'coind_type': coind_type,
 			'payload': b64encode( bz2.compress( json.dumps( payload ).encode('utf-8') ) ).decode('ascii')
-		}, separators=( ',', ':' ) ).encode()
+		} ).encode('ascii')
 		task = {
 			'app_engine_http_request': {
 				'http_method': 'POST',
 				'relative_uri': '/maintain/sendrawtransaction',
-				'headers': {'Content-Type': 'application/json'},
+				'headers': { 'Content-Type': 'application/x-www-form-urlencoded' },
 				'body': task_request_body
 			}
 		}

@@ -10,6 +10,7 @@ from coind import coind_factory
 from cloudsql import CloudSQL
 from base_handler import BaseHandler
 from datetime import datetime
+from urllib.parse import urlencode
 from util import SATOSHI_COIN
 from util import CVE_2018_17144
 import base64
@@ -599,15 +600,15 @@ class handler( BaseHandler ):
 	def add_cloudtasks( self, queue_name, coind_type, max_leng ):
 		client = CloudTasksClient()
 		parent = client.queue_path( config.gcp_project_id, config.gcp_location_id, queue_name )
-		task_request_body = json.dumps( {
+		task_request_body = urlencode( {
 			'coind_type': coind_type,
 			'max_leng': max_leng
-		}, separators=( ',', ':' ) ).encode()
+		} ).encode('ascii')
 		task = {
 			'app_engine_http_request': {
 				'http_method': 'POST',
 				'relative_uri': '/maintain/cron/update_db',
-				'headers': {'Content-Type': 'application/json'},
+				'headers': { 'Content-Type': 'application/x-www-form-urlencoded' },
 				'body': task_request_body
 			}
 		}
