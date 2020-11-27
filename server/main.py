@@ -34,8 +34,6 @@ def after_request(response):
     return response
 
 # 各APIのハンドラー
-## return以後の呼び出しについては以下デモレポジトリ参照
-## https://github.com/ry0y4n/clerk-flask
 @app.route("/api/v1/recentblkid")
 def recentblkid():
     return getrecentblkid.handler().get(request)
@@ -84,8 +82,7 @@ def updateDb():
     else:
         return update_db.handler().post(request)
 
-# base_handle.pyのhandle_exception代わり
-## 各ステータスのエラーハンドラー (404以外ロギング)
+# エラーハンドラ
 @app.errorhandler(400)
 @app.errorhandler(404)
 @app.errorhandler(500)
@@ -96,10 +93,12 @@ def error(e):
 
 @app.errorhandler(ValidationError)
 def validationError(e):
+    logging.exception(e)
     return jsonify({"exception": "validation", "msg": e.msg, "element": e.element}), 400
 
 @app.errorhandler(Exception)
 def exceptionError(e):
+    logging.exception(e)
     return jsonify({"exception": "Exception", "msg": e.args, "type": e.__doc__}), 500
 
 if __name__ == "__main__":
