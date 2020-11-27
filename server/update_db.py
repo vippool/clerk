@@ -450,7 +450,7 @@ def init_db( coind_type ):
 	c = db.cursor()
 	try:
 		# 本来であればプレイスホルダを使用したいところだが、
-		# DB 名は文字列ではないらしい MySQL のクソ仕様のため、
+		# MySQL の仕様では DB 名は文字列ではないらしいので、
 		# % で SQL 文を組み立てる。coind_type は入力チェックをパスしているため、
 		# SQL インジェクションにはならないはず。
 		c.execute( 'CREATE DATABASE %s' % coind_type )
@@ -463,7 +463,7 @@ def init_db( coind_type ):
 		db.close()
 
 	# 作成したデータベースに接続して、テーブルを作成する
-	# MySQL のクソ仕様により、CREATE TABLE は暗黙コミットされるので
+	# MySQL 仕様によると、CREATE TABLE は暗黙コミットされるので
 	# トランザクションの意味はまったくないが、失敗したら手動で
 	# DB ごと消せばいいのでとりあえずこれで
 	db = CloudSQL( coind_type )
