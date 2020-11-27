@@ -64,7 +64,7 @@ There is an order to respect, so please proceed as explained below:
 > gcloud app deploy queue.yaml  
 > gcloud app deploy cron.yaml
 
-TaskQueue sends sync requests from cron, and thus the synchronization is done regularly.
+Queues of Cloud Tasks sends sync requests from cron, and thus the synchronization is done regularly.
 
 You can even use it for other altcoins.
 However, if you change the node server, you may need to make a few modifications.

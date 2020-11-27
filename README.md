@@ -66,7 +66,7 @@ Google App Engine からアクセスするためのユーザを作成してお�
 > gcloud app deploy queue.yaml  
 > gcloud app deploy cron.yaml
 
-cron で TaskQueue にデータ同期のリクエストが投げられ、
+cron で Cloud Tasks のキューにデータ同期のリクエストが投げられ、
 順次、同期処理が行われていきます。
 
 立ち上げるコインノードを変更すれば、多少の変更が必要となるかもしれませんが、
