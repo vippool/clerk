@@ -8,6 +8,8 @@
 
 from flask import *
 import logging
+import google.cloud.logging
+from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 from base_handler import ValidationError
 
 import update_db
@@ -24,7 +26,15 @@ import submittx
 
 app = Flask(__name__)
 
-# CORSの設定
+# ロギングの設定
+@app.before_request
+def before_request():
+    client = google.cloud.logging.Client()
+    handler = CloudLoggingHandler( client )
+    logging.getLogger().setLevel( logging.INFO )
+    setup_logging( handler )
+
+# CORS の設定
 @app.after_request
 def after_request(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
@@ -33,7 +43,7 @@ def after_request(response):
     response.headers.add("Content-Type", "application/json")
     return response
 
-# 各APIのハンドラー
+# 各 API のハンドラー
 @app.route("/api/v1/recentblkid")
 def recentblkid():
     return getrecentblkid.handler().get(request)
@@ -70,7 +80,7 @@ def preparetransaction():
 def submittransaction():
     return submittx.handler().post(request)
 
-# 非公開API
+# 非公開 API
 @app.route("/maintain/sendrawtransaction", methods=["POST"])
 def sendrawtx():
     return sendrawtransaction.handler().post(request)

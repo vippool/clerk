@@ -326,7 +326,7 @@ def revert( db, coind_type, height ):
 			return False
 
 		# ここから巻き戻しを行う
-		logging.debug( '%s: revert() %d.' % (coind_type, height) )
+		logging.info( '%s: revert() %d.' % (coind_type, height) )
 
 		# ブロックヘッダは削除する
 		c.execute( 'DELETE FROM blockheader WHERE height = %s', (height,) )
@@ -549,15 +549,13 @@ def init_db( coind_type ):
 	return db
 
 def run( coind_type, max_leng ):
-	logging.getLogger().setLevel( logging.DEBUG )
-
 	try:
 		# 指定された coind のデータベースへ接続する
 		db = CloudSQL( coind_type )
 	except MySQLdb.OperationalError:
 		# 接続に失敗した場合、データベースの作成から行う
 		db = init_db( coind_type )
-		logging.debug( coind_type + ': DB initialized.' )
+		logging.info( coind_type + ': DB initialized.' )
 
 	# 同時実行を防ぐため、ロックをかける
 	with db.cursor() as c:
@@ -592,7 +590,7 @@ def run( coind_type, max_leng ):
 	# 実行結果をログと戻り値の双方に記述する
 	result = 'update_db: %d => %d' % ( start_block_height, end_block_height )
 
-	logging.debug( '%s: %s' % ( coind_type, result ) )
+	logging.info( '%s: %s' % ( coind_type, result ) )
 	return { 'result': result }
 
 # アップデートをシリアライズするため queue を経由する

@@ -17,7 +17,6 @@ import bz2
 
 class handler( BaseHandler ):
 	def post( self, request ):
-		logging.getLogger().setLevel( logging.DEBUG )
 		coind_type = self.get_request_coind_type(request)
 
 		# payload を展開する
@@ -52,7 +51,7 @@ class handler( BaseHandler ):
 		# ロギング
 		log_data = payload['log_data']
 		log_data['result'] = r
-		logging.debug(
+		logging.info(
 			json.dumps( log_data, ensure_ascii=False, indent=2, sort_keys=True, separators=(',', ': ') )
 		)
 
