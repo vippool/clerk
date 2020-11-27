@@ -7,9 +7,10 @@
 #========================================================#
 
 from flask import *
+import os
 import logging
 import google.cloud.logging
-from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
+from google.cloud.logging_v2.handlers import CloudLoggingHandler, ContainerEngineHandler, AppEngineHandler, setup_logging
 from base_handler import ValidationError
 
 import update_db
@@ -27,12 +28,13 @@ import submittx
 app = Flask(__name__)
 
 # ロギングの設定
-@app.before_request
-def before_request():
+if os.getenv('GAE_ENV', '').startswith('standard'):
+    logger = logging.getLogger()
     client = google.cloud.logging.Client()
     handler = CloudLoggingHandler( client )
-    logging.getLogger().setLevel( logging.INFO )
+    logger.setLevel( logging.INFO )
     setup_logging( handler )
+    logger.handlers = [ handler for handler in logger.handlers if isinstance( handler, (CloudLoggingHandler, ContainerEngineHandler, AppEngineHandler) ) ]
 
 # CORS の設定
 @app.after_request
