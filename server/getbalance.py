@@ -15,20 +15,20 @@ import json
 import time
 
 class handler( BaseHandler ):
-	def get( self ):
-		coind_type = self.get_request_coind_type()
-		addresses = self.request.get('addresses')
-		offset = self.get_request_int('offset', 0)
-		limit = self.get_request_int('limit', None)
+	def get( self, request ):
+		coind_type = self.get_request_coind_type(request)
+		addresses = request.args.get('addresses')
+		offset = self.get_request_int(request, 'offset', 0)
+		limit = self.get_request_int(request, 'limit', None)
 
 		# アドレス json を解析する
 		try:
 			addresses = ' '.join( json.loads( addresses ) )
 		except ValueError as e:
-			raise ValidationError( 'addresses', e.message )
+			raise ValidationError( 'addresses', e.msg )
 
 		db = CloudSQL( coind_type )
-		with db as c:
+		with db.cursor() as c:
 			# 現在の残高を取得する
 			c.execute( 'SELECT balance, serial FROM balance WHERE addresses = %s ORDER BY serial DESC LIMIT 1', (addresses,) )
 			r = c.fetchone()
@@ -58,4 +58,4 @@ class handler( BaseHandler ):
 					'balance': e['balance'] / SATOSHI_COIN
 				})
 
-		self.write_json( { 'balance': balance, 'history': history } )
+		return self.write_json( { 'balance': balance, 'history': history } )

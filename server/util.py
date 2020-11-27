@@ -20,13 +20,13 @@ ADDRESS_LENGTH = 34
 # アドレスのプレフィックスを返す
 def address_prefix( coind_type ):
 	if coind_type == 'bitcoind':
-		return '\x00'
+		return b'\x00'
 	if coind_type == 'bitcoind_test':
-		return '\x6f'
+		return b'\x6f'
 	if coind_type == 'monacoind':
-		return '\x32'
+		return b'\x32'
 	if coind_type == 'monacoind_test':
-		return '\x6f'
+		return b'\x6f'
 	raise Exception( 'unknown coind_type: %s' % coind_type )
 
 # BASE58 エンコード
@@ -34,10 +34,10 @@ def b58encode( src ):
 	mapping = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 	r = ''
-	n = long( hexlify( src ), 16 )
+	n = int( hexlify( src ), 16 )
 	for i in range( 0, ADDRESS_LENGTH ):
 		r = mapping[n % 58] + r
-		n = n / 58
+		n = int(n // 58)
 
 	return r
 
@@ -65,7 +65,7 @@ def b58decode( src, elem ):
 	if len( src ) != ADDRESS_LENGTH:
 		raise ValidationError( elem, 'len' )
 
-	n = long()
+	n = int()
 	for i in range( 0, ADDRESS_LENGTH ):
 		x = ord( src[i] )
 		if x < 0 or x > 255:
@@ -100,7 +100,7 @@ def decode_coin_address( addr, coind_type, elem ):
 		raise ValidationError( elem, 'len' )
 
 	# アドレスのプレフィックスを確認
-	if binary[0] != address_prefix( coind_type ):
+	if binary[0:1] != address_prefix( coind_type ):
 		raise ValidationError( elem, 'address_prefix' )
 
 	# チェックサムを確認する
@@ -117,7 +117,7 @@ def parse_pub_key( pub_key, elem ):
 	try:
 		b = bytearray( unhexlify( pub_key ) )
 	except TypeError as e:
-		raise ValidationError( elem, e.message )
+		raise ValidationError( elem, e.msg )
 
 	# プレフィックスがないものは論外
 	if len( b ) < 1:
@@ -147,12 +147,12 @@ def parse_pub_key( pub_key, elem ):
 # var_int 形式のバイト配列に変換する
 def var_int( n ):
 	if n < 0xFD:
-		return bytearray( chr( n ) )
+		return bytearray( bytes([n]) )
 	if n <= 0xFFFF:
-		return bytearray( '\xFD' + pack( '<H', n ) )
+		return bytearray( b'\xFD' + pack( '<H', n ) )
 	if n <= 0xFFFFFFFF:
-		return bytearray( '\xFE' + pack( '<I', n ) )
-	return bytearray( '\xFF' + pack( '<Q', n ) )
+		return bytearray( b'\xFE' + pack( '<I', n ) )
+	return bytearray( b'\xFF' + pack( '<Q', n ) )
 
 # CVE-2018-17144 によって UTXO の重複使用が可能になる
 def CVE_2018_17144( coind_type, txid ):

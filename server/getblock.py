@@ -15,13 +15,13 @@ import base64
 import bz2
 
 class handler( BaseHandler ):
-	def get( self ):
-		coind_type = self.get_request_coind_type()
-		height = self.get_request_int('height', None)
-		hash = self.request.get('hash', None)
+	def get( self, request ):
+		coind_type = self.get_request_coind_type(request)
+		height = self.get_request_int(request, 'height', None)
+		hash = request.args.get('hash', None)
 
 		db = CloudSQL( coind_type )
-		with db as c:
+		with db.cursor() as c:
 			# ブロックの取得
 			if height is not None:
 				c.execute( 'SELECT * FROM blockheader WHERE height = %s', (height,) )
@@ -63,4 +63,4 @@ class handler( BaseHandler ):
 		json_data['previousblockhash'] = previousblockhash
 
 		# JSON 形式でシリアライズして返す
-		self.write_json( json_data )
+		return self.write_json( json_data )

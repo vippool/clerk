@@ -25,3 +25,9 @@ monacoind_test_pass = ''
 cloudsql_name = ''
 cloudsql_user = ''
 cloudsql_pass = ''
+
+#
+# 実行環境情報
+#
+gcp_project_id  = ''
+gcp_location_id = ''

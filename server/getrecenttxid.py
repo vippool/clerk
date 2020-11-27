@@ -12,12 +12,12 @@ from cloudsql import CloudSQL
 import time
 
 class handler( BaseHandler ):
-	def get( self ):
-		coind_type = self.get_request_coind_type()
-		n = self.get_request_int( 'n', 10 )
+	def get( self, request ):
+		coind_type = self.get_request_coind_type(request)
+		n = self.get_request_int( request, 'n', 10 )
 
 		db = CloudSQL( coind_type )
-		with db as c:
+		with db.cursor() as c:
 			c.execute( 'SELECT txid, time, height, total_output FROM transaction ORDER BY time DESC LIMIT %s', (n,) )
 
 			r = []
@@ -31,4 +31,4 @@ class handler( BaseHandler ):
 				})
 
 		# JSON にシリアライズして返却
-		self.write_json( r )
+		return self.write_json( r )
