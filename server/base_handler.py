@@ -19,9 +19,9 @@ class ValidationError( Exception ):
 class BaseHandler():
 	def get_request_coind_type( self, request ):
 		if request.method == "POST":
-		    coind_type = request.form.get("coind_type")
-		    if coind_type is None:
-		    	coind_type = parse_qs( request.data.decode('utf-8') )['coind_type'][0]
+			coind_type = request.form.get("coind_type")
+			if coind_type is None:
+				coind_type = parse_qs( request.data.decode('utf-8') )['coind_type'][0]
 		else:
 		    coind_type = request.args["coind_type"]
 
