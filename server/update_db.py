@@ -105,14 +105,15 @@ def sync( db, coind_type, max_leng ):
 
 				# 縮小版の json データ作成
 				# - 信用できないデータは出力時に補完する。大きいデータは捨てる。
+				# - scriptPubKey の HEX は storage で使いたいので残すことにした @ 2020/12/11-
 				tx_json_reduce = copy.deepcopy( cd_transaction )
 				tx_json_reduce.pop( 'hex' )
 				tx_json_reduce.pop( 'confirmations' )
 				for e in tx_json_reduce['vin']:
 					if 'scriptSig' in e:
 						e['scriptSig'].pop( 'hex' )
-				for e in tx_json_reduce['vout']:
-					e['scriptPubKey'].pop( 'hex' )
+				#for e in tx_json_reduce['vout']:
+				#	e['scriptPubKey'].pop( 'hex' )
 
 				# BIP-30 違反検査は通常は対象とする
 				bip30_exception = False
