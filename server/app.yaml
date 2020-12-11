@@ -7,12 +7,7 @@ automatic_scaling:
   max_idle_instances: automatic
 
 handlers:
-- url: /api/v1/.*
-  script: auto
-  secure: always
-  redirect_http_response_code: 301
-
-- url: /maintain/.*
+- url: /.*
   script: auto
   secure: always
   redirect_http_response_code: 301
