@@ -63,7 +63,7 @@ def after_request(response):
     response.headers.add("Access-Control-Allow-Headers", "*")
     response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     response.headers.add("Content-Type", "application/json")
-	response.headers.add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+    response.headers.add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
     return response
 
 # 各 API のハンドラー
