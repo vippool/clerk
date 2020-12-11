@@ -36,6 +36,26 @@ if os.getenv('GAE_ENV', '').startswith('standard'):
     setup_logging( handler )
     logger.handlers = [ handler for handler in logger.handlers if isinstance( handler, (CloudLoggingHandler, ContainerEngineHandler, AppEngineHandler) ) ]
 
+# メンテナンス用エンドポイントへのアクセス制限
+@app.before_request
+def before_request():
+    error_response = json.dumps({
+        "message": "Access is denied.",
+        "url": request.path
+    })
+
+    if request.path == "/maintain/sendrawtransaction" and request.method == "POST":
+        if request.headers.get( "X-Appengine-Queuename" ) != "send-tx":
+            return Response( response=error_response, status=403 )
+
+    if request.path == "/maintain/cron/update_db":
+        if request.method == "POST" and request.headers.get( "X-Appengine-Queuename" ) not in [ "update-main-db-monacoind", "update-main-db-monacoind-test" ]:
+            return Response( response=error_response, status=403 )
+        if request.method == "GET" and request.headers.get( "X-Appengine-Cron" ) != "true":
+            return Response( response=error_response, status=403 )
+
+    return None
+
 # CORS の設定
 @app.after_request
 def after_request(response):

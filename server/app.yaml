@@ -12,4 +12,3 @@ handlers:
 
 - url: /maintain/.*
   script: auto
-  login: admin
