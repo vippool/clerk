@@ -1,6 +1,6 @@
 ﻿runtime: python38
 
-instance_class: F4
+instance_class: F1
 
 automatic_scaling:
   min_idle_instances: 1
