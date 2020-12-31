@@ -54,7 +54,7 @@ class handler( BaseHandler ):
 					json_txdata['vin'][i]['height'] = vin_link[i]['vout_height']
 					json_txdata['vin'][i]['txid'] = vin_link[i]['vout_txid']
 					if 'scriptSig' in json_txdata['vin'][i]:
-						if 'addresses' in vin_link[i]:
+						if vin_link[i]['addresses'] is not None:
 							json_txdata['vin'][i]['scriptSig']['addresses'] = vin_link[i]['addresses'].split(' ')
 
 				# vout 方向のリンクを追加する
