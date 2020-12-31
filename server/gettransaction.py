@@ -54,7 +54,8 @@ class handler( BaseHandler ):
 					json_txdata['vin'][i]['height'] = vin_link[i]['vout_height']
 					json_txdata['vin'][i]['txid'] = vin_link[i]['vout_txid']
 					if 'scriptSig' in json_txdata['vin'][i]:
-						json_txdata['vin'][i]['scriptSig']['addresses'] = vin_link[i]['addresses'].split(' ')
+						if 'addresses' in vin_link[i]:
+							json_txdata['vin'][i]['scriptSig']['addresses'] = vin_link[i]['addresses'].split(' ')
 
 				# vout 方向のリンクを追加する
 				c.execute( 'SELECT * FROM transaction_link WHERE vout_height = %s AND vout_txid = %s ORDER BY vout_idx', (e['height'], e['txid']) )
