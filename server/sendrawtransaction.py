@@ -2,7 +2,7 @@
 #                                                        #
 #  VP-clerk: sendrawtransaction.py - TX 送出 queue       #
 #                                                        #
-#                            (C) 2019-2019 VIPPOOL Inc.  #
+#                            (C) 2019-2021 VIPPOOL Inc.  #
 #                                                        #
 #========================================================#
 
