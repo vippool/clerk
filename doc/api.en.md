@@ -1,5 +1,10 @@
 # API document
 
+## Notice
+
+VIPPOOL Clerk API will be terminated on May 31, 2022.
+We would like to thank all of our users for using our service.
+
 ## Terms of Use
 
 All users shall use the API in accordance with this Terms of Use.
@@ -13,9 +18,7 @@ C)	Actions which may or will infringe the right of a third party;
 D)	Actions which may or will interfere or obstruct VIPPOOL’s business or interest.
 4. VIPPOOL may block your use of the API or terminate the vippool-clerk service without notification to you, for any reason, at VIPPOOL’s discretion.
 
-## Access to the server
-
-At runtime, the API connects to `clerk.vippool.net` using HTTPS.
+## Common argument
 
 In the following, `coind_type` stands for either `monacoind` or `monacoind_test`.
 

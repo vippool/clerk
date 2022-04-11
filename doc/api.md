@@ -1,5 +1,10 @@
 # API document
 
+## お知らせ
+
+VIPPOOL Clerk の API 提供は 2022年5月31日 をもちまして終了させて頂くこととなりました。
+今まで多くのユーザーの皆様にご利用いただき、心から御礼申し上げます。
+
 ## API の利用条件
 
 本APIは、無償でご利用いただけます。
@@ -12,11 +17,9 @@
 
 当社の判断により、理由の如何を問わず、ユーザーに通知なく、APIによる接続遮断や運用停止することができます。
 
-## 接続先
+## 共通引数
 
-API 実行時は `clerk.vippool.net` へ HTTPS で接続します。
-
-以下、引数 `coind_type` は `monacoind`, `monacoind_test` のいずれかを選択します。
+引数 `coind_type` は `monacoind`, `monacoind_test` のいずれかを選択します。
 
 ## エラー発生時
 

@@ -79,6 +79,6 @@ dev-team@vippool.net
 
 ## License
 
-(C) 2019-2021 VIPPOOL Inc.
+(C) 2019-2022 VIPPOOL Inc.
 
 This project is published under the MIT license.

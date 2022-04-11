@@ -82,6 +82,6 @@ dev-team@vippool.net
 
 ## ライセンス
 
-(C) 2019-2021 VIPPOOL Inc.
+(C) 2019-2022 VIPPOOL Inc.
 
 このプロジェクトは、MIT ライセンスで提供されます。
