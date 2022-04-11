@@ -5,6 +5,19 @@
 VIPPOOL Clerk API will be terminated on May 31, 2022.
 We would like to thank all of our users for using our service.
 
+## Terms of Use
+
+All users shall use the API in accordance with this Terms of Use.
+
+1. You may use the API free of charge.
+2. THE API IS PROVIDED "AS IS" WITHOUT ANY WARRANTIES OR INDEMNITIES. YOU SHALL, WITHOUT EXCEPTION, BEAR RESPONSIBILITY FOR ANY USE OF THE API. VIPPOOL SHALL NOT IN ANY WAY BE RESPONSIBLE OR LIABLE FOR ANY LOSSES OR DAMAGES AS A RESULT OF USING THE API.
+3. You shall not, directly or indirectly, take any of the following actions;  
+A)	Actions which may or will violate laws and regulations;  
+B)	Actions which may or will be contrary to public order or morality;  
+C)	Actions which may or will infringe the right of a third party;  
+D)	Actions which may or will interfere or obstruct VIPPOOL’s business or interest.
+4. VIPPOOL may block your use of the API or terminate the vippool-clerk service without notification to you, for any reason, at VIPPOOL’s discretion.
+
 ## Common argument
 
 In the following, `coind_type` stands for either `monacoind` or `monacoind_test`.
